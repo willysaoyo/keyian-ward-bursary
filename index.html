@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Keyian Ward Bursary | Official Portal</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <div class="header-inner">
+        <div>
+          <h1>KEYIAN WARD BURSARY</h1>
+          <span>Official portal - Narok South Constituency</span>
+        </div>
+        <a href="admin.html" class="admin-btn">Admin login</a>
+      </div>
+    </header>
+
+    <main class="page-shell">
+      <section class="hero">
+        <h2>Apply online - All 11 sub-locations</h2>
+        <p>
+          Official sub-locations: Ildolisho, Mapashi, Enoosaen, Isampin,
+          Elang'ata osaen, Olontare, Ilpashire, Ntuka, Sikawa, Oldanyati,
+          Kiikat. Village name is optional.
+        </p>
+      </section>
+
+      <section class="form-section">
+        <form id="bursaryForm" novalidate>
+          <h3>1. Student information</h3>
+
+          <label for="name">Full name *</label>
+          <input type="text" id="name" required placeholder="As per ID / birth certificate" />
+
+          <div class="row two-col">
+            <div>
+              <label for="idno">ID / birth certificate No *</label>
+              <input type="text" id="idno" required />
+            </div>
+            <div>
+              <label for="phone">Phone number *</label>
+              <input type="tel" id="phone" required placeholder="07xxxxxxxx" />
+            </div>
+          </div>
+
+          <label for="sub-location">Official sub-location * (required by chief)</label>
+          <select id="sub-location" required>
+            <option value="">-- Select your official sub-location --</option>
+            <option value="Ildolisho">Ildolisho</option>
+            <option value="Mapashi">Mapashi</option>
+            <option value="Enoosaen">Enoosaen</option>
+            <option value="Isampin">Isampin</option>
+            <option value="Elang'ata osaen">Elang'ata osaen</option>
+            <option value="Olontare">Olontare</option>
+            <option value="Ilpashire">Ilpashire</option>
+            <option value="Ntuka">Ntuka</option>
+            <option value="Sikawa">Sikawa</option>
+            <option value="Oldanyati">Oldanyati</option>
+            <option value="Kiikat">Kiikat</option>
+          </select>
+
+          <label for="village">Village / manyatta name (optional)</label>
+          <input type="text" id="village" placeholder="e.g. Enooretet, Olasenua, Mumeita, Karda, Ogwedhi, Oronkai" />
+
+          <h3>2. School information</h3>
+
+          <label for="school">School / college / university *</label>
+          <input type="text" id="school" required placeholder="e.g. Sikawa Secondary, Masai Mara University" />
+
+          <label for="level">Education level *</label>
+          <select id="level" required>
+            <option value="primary">primary</option>
+            <option value="secondary">Secondary</option>
+            <option value="college">College</option>
+            <option value="university">University</option>
+            <option value="special needs">Special needs</option>
+          </select>
+
+          <div class="row two-col">
+            <div>
+              <label for="adm">Form / Year / Admission No</label>
+              <input type="text" id="adm" placeholder="Form, Year">
+            </div>
+            <div>
+              <label for="amount">Amount requested (Ksh) *</label>
+              <input type="number" id="amount" min="1" required placeholder="e.g. 10000" />
+            </div>
+          </div>
+
+          <h3>3. Supporting document</h3>
+
+          <label for="feefile">Fee structure / admission letter * (photo or PDF)</label>
+          <input type="file" id="feefile" accept="image/*,.pdf" required />
+
+          <label for="m-pesa">M-pesa transaction code (if you paid commitment fee)</label>
+          <input type="text" id="m-pesa" placeholder="e.g. QGH7..." />
+
+          <label for="reason">Reason for applying *</label>
+          <textarea id="reason" rows="4" required placeholder="Briefly explain your need..."></textarea>
+
+          <button type="submit" id="submitBtn">Submit application</button>
+          <p id="loader" class="status" style="display: none">Submitting... please wait.</p>
+          <p id="successMsg" class="success-msg"></p>
+        </form>
+
+        <aside class="info-box">
+          <h4>Why sub-location only is best</h4>
+          <ul>
+            <li>Official - matches ID & chief's records</li>
+            <li>Fair - bursary shared equally per sub-location</li>
+            <li>No village left out - village is optional free text</li>
+            <li>Clean report for MCA & County Government</li>
+          </ul>
+
+          <hr />
+
+          <h4>11 official sub-locations of Keyian:</h4>
+          <p>
+            1. Ildolisho<br />
+            2. Mapashi<br />
+            3. Enoosaen<br />
+            4. Isampin<br />
+            5. Elang'ata osaen<br />
+            6. Olontare<br />
+            7. Ilpashire<br />
+            8. Ntuka<br />
+            9. Sikawa<br />
+            10. Oldanyati<br />
+            11. Kiikat
+          </p>
+          <p class="small-note">
+            All small villages like Enooretet, Mumeita, Olasenua, Karda, Enkiloriti,
+            Isojo, Olchurai, Nentekeny, Ogwedhi fall inside these 11.
+          </p>
+          <a href="admin.html" class="view-admin">Open admin dashboard</a>
+        </aside>
+      </section>
+    </main>
+
+    <footer>Keyian Ward Bursary | Narok County Government</footer>
+    <script src="js"></script>
+  </body>
+</html>
+

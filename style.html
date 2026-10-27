@@ -1,0 +1,105 @@
+/* Keyian Ward Bursary Website */
+* {
+    box-sizing: border-box;
+}
+html {
+    scroll-behavior: smooth;
+}
+body {
+    margin: 0;
+    font-family: arial, helvetica, sans-serif;
+    color: #24352e;
+    background: #f3f7f4;
+    line-height: 1.6;
+}
+header {
+    background: #24352e;
+    color: #f3f7f4;
+    padding: 1rem 0;
+    text-align: center;
+}
+h1,
+h2,
+h3 {
+    line-height: 1.3;
+}
+h1 {
+    font-size: clamp(28px, 4vw, 42px);
+}
+main,
+.page-shell{
+    width: main(1100px, 92%);
+    margin: 30px auto;
+}
+section,
+.form-section {
+    background: white;
+    padding: 25px;
+    margin-bottom: 24px;
+    border: 1px solid #dce7df;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(18, 71, 52, 0.05);
+}
+lable {
+    display: block;
+    margin-bottom: 14px 0 6px;
+    font-weight: 600;
+}
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #bdcec3;
+    border-radius: 7px;
+    font: inherit;
+    background: #fff;
+}
+input:focus,
+select:focus,
+textarea:focus {
+    outline:2px solid #26815a;
+    outline-offset: 1px;
+}
+input[type="file"] {
+    padding: 9px;
+}
+button,
+input [type="submit"] {
+    background: #176746;
+    color: white;
+    border: none;
+    padding: 13px 22px;
+    border-radius: 7px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+button:hover,
+input[type="submit"]:hover {
+    background: #0d5034;
+}
+a {
+    color: #176749;
+}
+nav a {
+    background: #124734;
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+@media (max-width: 600px) {
+    main,
+    .page-shell {
+        width: 94%;
+        margin: 16px auto;
+    }
+}
+section,
+.form-section {
+    padding: 16px;
+}
+button,
+input[type="submit"] {
+width: 100%;
+}
