@@ -20,3 +20,12 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         }
     });
+
+    // KEYIAN WARD BURSARY APPLICATION SYSTEM
+    const bursaryForm = document.getElementById("bursaryform");
+    if (bursaryForm) {
+        bursaryForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+            alert("your application has been submitted successfully!");
+        });
+    }
