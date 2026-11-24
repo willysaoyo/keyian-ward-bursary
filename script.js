@@ -1,45 +1,34 @@
 
-// ==================================================
-// KEYIAN WARD BURSARY WEBSITE
-// COMPLETE ADMIN AND APPLICATION SYSTEM
-// ==================================================
+// ======================================================
+// KEYIAN WARD BURSARY
+// COMPLETE SUPABASE APPLICATION AND ADMIN SYSTEM
+// ======================================================
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
 
-    const STORAGE_KEY = "keyianApplications";
+    // ======================================================
+    // 1. SYSTEM SETTINGS
+    // ======================================================
 
-    // ==================================================
-    // 1. HELPER FUNCTIONS
-    // ==================================================
+    const ADMIN_EMAIL = "wj7495751@gmail.com";
+    const ADMIN_USERNAME = "KEYIAN";
 
-    function getApplications() {
-        try {
-            const data = JSON.parse(
-                localStorage.getItem(STORAGE_KEY) || "[]"
-            );
+    const BUCKET_NAME = "bursary-documents";
+    const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
-            return Array.isArray(data) ? data : [];
+    const supabase = window.supabaseClient;
 
-        } catch (error) {
-            console.error("Application loading error:", error);
-            return [];
-        }
+    let applications = [];
+
+    if (!supabase) {
+        alert("Supabase is not connected. Please check supabase.js.");
+        console.error("Supabase client not found.");
+        return;
     }
 
-    function saveApplications(applications) {
-        try {
-            localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify(applications)
-            );
-
-            return true;
-
-        } catch (error) {
-            console.error("Application saving error:", error);
-            return false;
-        }
-    }
+    // ======================================================
+    // 2. HELPER FUNCTIONS
+    // ======================================================
 
     function escapeHTML(value) {
         return String(value ?? "").replace(/[&<>"']/g, function (character) {
@@ -54,178 +43,438 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function generateReference() {
-        return "KWB-" + Date.now();
+        const randomPart = Math.random()
+            .toString(36)
+            .substring(2, 8)
+            .toUpperCase();
+
+        return "KWB-" + Date.now() + "-" + randomPart;
     }
 
     function getStatus(app) {
         return app.status || "Pending";
     }
 
-    // ==================================================
-    // 2. ADMIN LOGIN
-    // ==================================================
+    function convertApplication(row) {
+        return {
+            id: row.id,
+            reference: row.reference_number,
+            name: row.student_name,
+            idno: row.id_number,
+            phone: row.phone,
+            subLocation: row.sub_location,
+            village: row.village,
+            school: row.school,
+            level: row.level,
+            admission: row.admission_number,
+            amount: row.amount_requested,
+            mpesa: row.mpesa_number,
+            reason: row.reason,
+            status: row.application_status || "Pending",
+            date: row.application_date
+                ? new Date(row.application_date).toLocaleString()
+                : "",
+            documentName: row.document_name || "Not provided",
+            documentPath: row.document_path || ""
+        };
+    }
+
+    function fieldValue(id) {
+        const element = document.getElementById(id);
+        return element ? element.value.trim() : "";
+    }
+
+    function showError(message) {
+        alert(message);
+    }
+
+    // ======================================================
+    // 3. ADMIN LOGIN
+    // ======================================================
 
     const loginForm = document.getElementById("admin-login-form");
 
     if (loginForm) {
 
-        loginForm.addEventListener("submit", function (event) {
+        loginForm.addEventListener("submit", async function (event) {
 
             event.preventDefault();
 
-            const usernameElement = document.getElementById("username");
+            const username = fieldValue("username");
             const passwordElement = document.getElementById("password");
+            const password = passwordElement ? passwordElement.value : "";
 
-            if (!usernameElement || !passwordElement) {
-                alert("Login fields are missing.");
+            if (username.toUpperCase() !== ADMIN_USERNAME) {
+                showError("Incorrect administrator username.");
                 return;
             }
 
-            const username = usernameElement.value.trim();
-            const password = passwordElement.value;
+            if (!password) {
+                showError("Please enter your password.");
+                return;
+            }
 
-            if (
-                username === "KEYIAN" &&
-                password === "kiseriann"
-            ) {
+            const loginButton = loginForm.querySelector('button[type="submit"]');
+
+            if (loginButton) {
+                loginButton.disabled = true;
+                loginButton.textContent = "Signing in...";
+            }
+
+            try {
+
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: ADMIN_EMAIL,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                if (!data.user || data.user.email !== ADMIN_EMAIL) {
+                    await supabase.auth.signOut();
+                    throw new Error("Unauthorized administrator account.");
+                }
 
                 alert("Login successful!");
 
                 window.location.href = "admin-dashboard.html";
 
-            } else {
+            } catch (error) {
 
-                alert("Incorrect username or password.");
+                console.error("Login error:", error);
 
+                showError("Login failed: " + error.message);
+
+                if (loginButton) {
+                    loginButton.disabled = false;
+                    loginButton.textContent = "Login";
+                }
             }
-
         });
-
     }
 
-    // ==================================================
-    // 3. BURSARY APPLICATION SYSTEM
-    // ==================================================
+    // ======================================================
+    // 4. STUDENT APPLICATION SUBMISSION
+    // ======================================================
 
     const bursaryForm = document.getElementById("bursaryForm");
 
     if (bursaryForm) {
 
-        bursaryForm.addEventListener("submit", function (event) {
+        bursaryForm.addEventListener("submit", async function (event) {
 
             event.preventDefault();
 
             const fileInput = document.getElementById("feefile");
 
             if (!fileInput || !fileInput.files.length) {
-
-                alert("Please upload your supporting document.");
-
+                showError("Please upload your supporting document.");
                 return;
-
             }
 
-            function fieldValue(id) {
+            const file = fileInput.files[0];
 
-                const element = document.getElementById(id);
+            const allowedTypes = [
+                "application/pdf",
+                "image/jpeg",
+                "image/png",
+                "image/webp"
+            ];
 
-                return element ? element.value.trim() : "";
-
+            if (!allowedTypes.includes(file.type)) {
+                showError("Please upload a PDF, JPG, PNG or WEBP document.");
+                return;
             }
 
-            const application = {
+            if (file.size > MAX_FILE_SIZE) {
+                showError("Your document is too large. Maximum size is 5 MB.");
+                return;
+            }
 
-                reference: generateReference(),
+            if (file.size === 0) {
+                showError("The selected document is empty.");
+                return;
+            }
 
-                name: fieldValue("name"),
-
-                idno: fieldValue("idno"),
-
+            const applicationData = {
+                student_name: fieldValue("name"),
+                id_number: fieldValue("idno"),
                 phone: fieldValue("phone"),
-
-                subLocation: fieldValue("sub-location"),
-
+                sub_location: fieldValue("sub-location"),
                 village: fieldValue("village"),
-
                 school: fieldValue("school"),
-
                 level: fieldValue("level"),
-
-                admission: fieldValue("adm"),
-
-                amount: fieldValue("amount"),
-
-                documentName: fileInput.files[0].name,
-
-                mpesa: fieldValue("m-pesa"),
-
+                admission_number: fieldValue("adm"),
+                amount_requested: fieldValue("amount")
+                    ? Number(fieldValue("amount"))
+                    : null,
+                mpesa_number: fieldValue("m-pesa"),
                 reason: fieldValue("reason"),
-
-                status: "Pending",
-
-                date: new Date().toLocaleString()
-
+                reference_number: generateReference(),
+                application_status: "Pending"
             };
 
-            const applications = getApplications();
-
-            applications.push(application);
-
-            if (!saveApplications(applications)) {
-
-                alert("Unable to save application. Please try again.");
-
+            if (
+                !applicationData.student_name ||
+                !applicationData.id_number ||
+                !applicationData.phone ||
+                !applicationData.sub_location ||
+                !applicationData.school ||
+                !applicationData.level ||
+                !applicationData.reason ||
+                !applicationData.amount_requested ||
+                !Number.isFinite(applicationData.amount_requested) ||
+                applicationData.amount_requested <= 0
+            ) {
+                showError("Please complete all required fields correctly.");
                 return;
-
             }
 
+            const submitButton = bursaryForm.querySelector('[type="submit"]');
+            const loader = document.getElementById("loader");
             const successMsg = document.getElementById("successMsg");
 
-            if (successMsg) {
-
-                successMsg.textContent =
-                    "Application submitted successfully! Reference Number: " +
-                    application.reference;
-
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = "Submitting...";
             }
 
-            alert(
-                "Application submitted successfully!\n" +
-                "Reference Number: " +
-                application.reference
-            );
+            if (loader) loader.style.display = "block";
+            if (successMsg) successMsg.textContent = "";
 
-            bursaryForm.reset();
+            let uploadedPath = null;
 
+            try {
+
+                // ------------------------------------------
+                // UPLOAD SUPPORTING DOCUMENT
+                // ------------------------------------------
+
+                const safeFileName = file.name.replace(
+                    /[^a-zA-Z0-9._-]/g,
+                    "_"
+                );
+
+                uploadedPath =
+                    applicationData.reference_number +
+                    "/" +
+                    Date.now() +
+                    "_" +
+                    safeFileName;
+
+                const { error: uploadError } = await supabase.storage
+                    .from(BUCKET_NAME)
+                    .upload(uploadedPath, file, {
+                        cacheControl: "3600",
+                        upsert: false,
+                        contentType: file.type
+                    });
+
+                if (uploadError) throw uploadError;
+
+                // ------------------------------------------
+                // SAVE APPLICATION IN DATABASE
+                // ------------------------------------------
+
+                applicationData.document_name = file.name;
+                applicationData.document_path = uploadedPath;
+
+                const { error: insertError } = await supabase
+                    .from("applications")
+                    .insert([applicationData]);
+
+                if (insertError) throw insertError;
+
+                const reference = applicationData.reference_number;
+
+                if (successMsg) {
+                    successMsg.textContent =
+                        "Application submitted successfully! Your reference number is " +
+                        reference;
+                }
+
+                alert(
+                    "Application submitted successfully!\n\n" +
+                    "Your Reference Number: " + reference
+                );
+
+                bursaryForm.reset();
+
+            } catch (error) {
+
+                console.error("Application submission error:", error);
+
+                // Try to remove an uploaded file if saving the
+                // application in the database failed.
+                if (uploadedPath) {
+                    try {
+                        await supabase.storage
+                            .from(BUCKET_NAME)
+                            .remove([uploadedPath]);
+                    } catch (cleanupError) {
+                        console.error("Document cleanup failed:", cleanupError);
+                    }
+                }
+
+                showError(
+                    "Application could not be submitted: " +
+                    error.message
+                );
+
+            } finally {
+
+                if (loader) loader.style.display = "none";
+
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.textContent = "Submit Application";
+                }
+            }
         });
-
     }
 
-    // ==================================================
-    // 4. ADMIN DASHBOARD
-    // ==================================================
+    // ======================================================
+    // 5. ADMIN DASHBOARD SECURITY
+    // ======================================================
 
     const applicationsTable = document.getElementById("applicationsTable");
 
     if (applicationsTable) {
 
-        const totalElement =
-            document.getElementById("totalApplications");
+        try {
 
-        const pendingElement =
-            document.getElementById("pendingApplications");
+            const { data, error } = await supabase.auth.getUser();
 
-        const approvedElement =
-            document.getElementById("approvedApplications");
+            if (error || !data.user || data.user.email !== ADMIN_EMAIL) {
 
-        const rejectedElement =
-            document.getElementById("rejectedApplications");
+                await supabase.auth.signOut();
 
-        const searchInput =
-            document.getElementById("applicationSearch");
+                alert("Please log in as the authorized administrator.");
+
+                window.location.href = "admin.html";
+                return;
+            }
+
+        } catch (error) {
+
+            console.error("Admin verification error:", error);
+
+            window.location.href = "admin.html";
+            return;
+        }
 
         // ==================================================
-        // 5. APPLICATION DETAILS MODAL
+        // 6. ADMIN LOGOUT
+        // ==================================================
+
+        const logoutButton = document.getElementById("logoutBtn");
+
+        if (logoutButton) {
+
+            logoutButton.addEventListener("click", async function () {
+
+                if (!confirm("Are you sure you want to log out?")) {
+                    return;
+                }
+
+                logoutButton.disabled = true;
+                logoutButton.textContent = "Logging out...";
+
+                try {
+
+                    const { error } = await supabase.auth.signOut();
+
+                    if (error) throw error;
+
+                    window.location.href = "admin.html";
+
+                } catch (error) {
+
+                    console.error("Logout error:", error);
+
+                    showError("Unable to log out: " + error.message);
+
+                    logoutButton.disabled = false;
+                    logoutButton.textContent = "Logout";
+                }
+            });
+        }
+
+        const totalElement = document.getElementById("totalApplications");
+        const pendingElement = document.getElementById("pendingApplications");
+        const approvedElement = document.getElementById("approvedApplications");
+        const rejectedElement = document.getElementById("rejectedApplications");
+        const searchInput = document.getElementById("applicationSearch");
+
+        // ==================================================
+        // 7. LOAD APPLICATIONS
+        // ==================================================
+
+        async function loadApplications() {
+
+            applicationsTable.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align:center;padding:20px;">
+                        Loading applications...
+                    </td>
+                </tr>
+            `;
+
+            try {
+
+                const { data, error } = await supabase
+                    .from("applications")
+                    .select("*")
+                    .order("application_date", { ascending: false });
+
+                if (error) throw error;
+
+                applications = (data || []).map(convertApplication);
+
+                displayApplications();
+
+            } catch (error) {
+
+                console.error("Loading applications error:", error);
+
+                applicationsTable.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align:center;color:red;padding:20px;">
+                            Unable to load applications: ${escapeHTML(error.message)}
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        // ==================================================
+        // 8. DASHBOARD STATISTICS
+        // ==================================================
+
+        function updateStatistics() {
+
+            if (totalElement) {
+                totalElement.textContent = applications.length;
+            }
+
+            if (pendingElement) {
+                pendingElement.textContent =
+                    applications.filter(app => getStatus(app) === "Pending").length;
+            }
+
+            if (approvedElement) {
+                approvedElement.textContent =
+                    applications.filter(app => getStatus(app) === "Approved").length;
+            }
+
+            if (rejectedElement) {
+                rejectedElement.textContent =
+                    applications.filter(app => getStatus(app) === "Rejected").length;
+            }
+        }
+
+        // ==================================================
+        // 9. APPLICATION DETAILS MODAL
         // ==================================================
 
         const modal = document.createElement("div");
@@ -259,13 +508,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     padding:9px 15px;
                     border-radius:5px;
                     cursor:pointer;
-                ">
-                    Close X
-                </button>
+                ">Close X</button>
 
-                <h2 style="color:#123b27;">
-                    Application Details
-                </h2>
+                <h2 style="color:#123b27;">Application Details</h2>
 
                 <div id="applicationDetailsContent"></div>
 
@@ -274,133 +519,117 @@ document.addEventListener("DOMContentLoaded", function () {
 
         document.body.appendChild(modal);
 
-        const detailsContent =
-            document.getElementById("applicationDetailsContent");
+        const detailsContent = document.getElementById(
+            "applicationDetailsContent"
+        );
 
         // ==================================================
-        // 6. VIEW APPLICATION DETAILS
+        // 10. VIEW APPLICATION DETAILS
         // ==================================================
 
-        function viewApplication(index) {
-
-            const applications = getApplications();
+        async function viewApplication(index) {
 
             const app = applications[index];
 
             if (!app) {
-
-                alert("Application not found.");
-
+                showError("Application not found.");
                 return;
-
             }
 
             const details = [
-
                 ["Reference Number", app.reference],
-
                 ["Student Name", app.name],
-
                 ["ID Number", app.idno],
-
                 ["Phone Number", app.phone],
-
                 ["Sub-location", app.subLocation],
-
                 ["Village", app.village],
-
                 ["School / Institution", app.school],
-
                 ["Education Level", app.level],
-
                 ["Admission Number", app.admission],
-
-                ["Amount Requested", app.amount],
-
+                ["Amount Requested (Ksh)", app.amount],
                 ["Supporting Document", app.documentName],
-
                 ["M-Pesa Number", app.mpesa],
-
                 ["Reason for Application", app.reason],
-
                 ["Application Date", app.date],
-
                 ["Application Status", getStatus(app)]
-
             ];
 
             detailsContent.innerHTML = details.map(function (detail) {
-
                 return `
                     <div style="
                         padding:12px;
                         border-bottom:1px solid #ddd;
                         overflow-wrap:anywhere;
                     ">
-
                         <strong>${escapeHTML(detail[0])}:</strong>
-
                         ${escapeHTML(detail[1] || "Not provided")}
-
                     </div>
                 `;
-
             }).join("");
 
-            modal.style.display = "block";
+            if (app.documentPath) {
 
+                const documentRow = document.createElement("div");
+                documentRow.style.padding = "12px";
+
+                documentRow.textContent = "Supporting document: ";
+
+                const loadingText = document.createElement("span");
+                loadingText.textContent = "Preparing secure document link...";
+
+                documentRow.appendChild(loadingText);
+                detailsContent.appendChild(documentRow);
+
+                modal.style.display = "block";
+
+                try {
+
+                    const { data, error } = await supabase.storage
+                        .from(BUCKET_NAME)
+                        .createSignedUrl(app.documentPath, 60);
+
+                    if (error) throw error;
+
+                    const link = document.createElement("a");
+
+                    link.href = data.signedUrl;
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
+                    link.textContent = "Open supporting document";
+
+                    loadingText.replaceWith(link);
+
+                } catch (error) {
+
+                    console.error("Document access error:", error);
+
+                    loadingText.textContent =
+                        "Unable to open document: " + error.message;
+                }
+
+            } else {
+                modal.style.display = "block";
+            }
         }
 
-        // ==================================================
-        // 7. DASHBOARD STATISTICS
-        // ==================================================
+        document.getElementById("closeDetailsModal")
+            .addEventListener("click", function () {
+                modal.style.display = "none";
+            });
 
-        function updateStatistics(applications) {
-
-            if (totalElement) {
-
-                totalElement.textContent = applications.length;
-
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                modal.style.display = "none";
             }
-
-            if (pendingElement) {
-
-                pendingElement.textContent =
-                    applications.filter(app =>
-                        getStatus(app) === "Pending"
-                    ).length;
-
-            }
-
-            if (approvedElement) {
-
-                approvedElement.textContent =
-                    applications.filter(app =>
-                        getStatus(app) === "Approved"
-                    ).length;
-
-            }
-
-            if (rejectedElement) {
-
-                rejectedElement.textContent =
-                    applications.filter(app =>
-                        getStatus(app) === "Rejected"
-                    ).length;
-
-            }
-
-        }
+        });
 
         // ==================================================
-        // 8. DISPLAY APPLICATIONS
+        // 11. DISPLAY APPLICATIONS
         // ==================================================
 
         function displayApplications() {
 
-            const applications = getApplications();
-
-            updateStatistics(applications);
+            updateStatistics();
 
             const searchTerm = searchInput
                 ? searchInput.value.toLowerCase().trim()
@@ -413,21 +642,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     const app = item.app;
 
                     return [
-
                         app.reference,
                         app.name,
                         app.idno,
                         app.phone,
                         app.school,
                         app.village,
+                        app.subLocation,
                         app.status
-
                     ].some(value =>
-                        String(value || "")
-                            .toLowerCase()
-                            .includes(searchTerm)
+                        String(value || "").toLowerCase().includes(searchTerm)
                     );
-
                 });
 
             if (filteredApplications.length === 0) {
@@ -441,181 +666,129 @@ document.addEventListener("DOMContentLoaded", function () {
                 `;
 
                 return;
-
             }
 
-            applicationsTable.innerHTML =
-                filteredApplications.map(function (item) {
+            applicationsTable.innerHTML = filteredApplications.map(function (item) {
 
-                    const app = item.app;
+                const app = item.app;
 
-                    return `
-                        <tr>
+                return `
+                    <tr>
+                        <td>${item.index + 1}</td>
+                        <td>${escapeHTML(app.name)}</td>
+                        <td>${escapeHTML(app.idno)}</td>
+                        <td>${escapeHTML(app.phone)}</td>
+                        <td>${escapeHTML(app.school)}</td>
+                        <td>${escapeHTML(app.amount)}</td>
+                        <td>${escapeHTML(app.date || "Not available")}</td>
+                        <td>${escapeHTML(getStatus(app))}</td>
 
-                            <td>${item.index + 1}</td>
+                        <td>
+                            <button
+                                data-action="view"
+                                data-index="${item.index}"
+                                style="background:#2563eb;color:white;border:none;padding:7px;border-radius:4px;margin:2px;cursor:pointer;">
+                                View Details
+                            </button>
 
-                            <td>${escapeHTML(app.name)}</td>
+                            <button
+                                data-action="approve"
+                                data-index="${item.index}"
+                                style="background:#15803d;color:white;border:none;padding:7px;border-radius:4px;margin:2px;cursor:pointer;">
+                                Approve
+                            </button>
 
-                            <td>${escapeHTML(app.idno)}</td>
+                            <button
+                                data-action="reject"
+                                data-index="${item.index}"
+                                style="background:#b91c1c;color:white;border:none;padding:7px;border-radius:4px;margin:2px;cursor:pointer;">
+                                Reject
+                            </button>
+                        </td>
+                    </tr>
+                `;
 
-                            <td>${escapeHTML(app.phone)}</td>
-
-                            <td>${escapeHTML(app.school)}</td>
-
-                            <td>${escapeHTML(app.amount)}</td>
-
-                            <td>${escapeHTML(app.date || "Not available")}</td>
-
-                            <td>${escapeHTML(getStatus(app))}</td>
-
-                            <td>
-
-                                <button
-                                    data-action="view"
-                                    data-index="${item.index}"
-                                    style="background:#2563eb;color:white;border:none;padding:7px;border-radius:4px;margin:2px;cursor:pointer;">
-                                    View Details
-                                </button>
-
-                                <button
-                                    data-action="approve"
-                                    data-index="${item.index}"
-                                    style="background:#15803d;color:white;border:none;padding:7px;border-radius:4px;margin:2px;cursor:pointer;">
-                                    Approve
-                                </button>
-
-                                <button
-                                    data-action="reject"
-                                    data-index="${item.index}"
-                                    style="background:#b91c1c;color:white;border:none;padding:7px;border-radius:4px;margin:2px;cursor:pointer;">
-                                    Reject
-                                </button>
-
-                            </td>
-
-                        </tr>
-                    `;
-
-                }).join("");
-
+            }).join("");
         }
 
         // ==================================================
-        // 9. VIEW, APPROVE AND REJECT
+        // 12. VIEW, APPROVE AND REJECT
         // ==================================================
 
-        applicationsTable.addEventListener("click", function (event) {
+        applicationsTable.addEventListener("click", async function (event) {
 
             const button = event.target.closest("button[data-action]");
 
             if (!button) return;
 
             const action = button.dataset.action;
-
             const index = Number(button.dataset.index);
+            const app = applications[index];
 
-            const applications = getApplications();
-
-            if (!Number.isInteger(index) || !applications[index]) {
-
-                alert("Application not found.");
-
+            if (!app) {
+                showError("Application not found.");
                 return;
-
             }
 
             if (action === "view") {
-
-                viewApplication(index);
-
+                await viewApplication(index);
                 return;
-
             }
 
-            if (action === "approve") {
+            if (action !== "approve" && action !== "reject") return;
 
-                if (!confirm("Are you sure you want to approve this application?")) {
-                    return;
-                }
+            const newStatus = action === "approve"
+                ? "Approved"
+                : "Rejected";
 
-                applications[index].status = "Approved";
+            if (!confirm("Are you sure you want to " + action + " this application?")) {
+                return;
+            }
 
-                if (!saveApplications(applications)) {
+            button.disabled = true;
 
-                    alert("Unable to update application.");
+            try {
 
-                    return;
+                const { error } = await supabase
+                    .from("applications")
+                    .update({
+                        application_status: newStatus
+                    })
+                    .eq("id", app.id);
 
-                }
+                if (error) throw error;
 
-                alert("Application approved successfully!");
+                app.status = newStatus;
+
+                alert("Application " + newStatus.toLowerCase() + " successfully!");
 
                 displayApplications();
 
+            } catch (error) {
+
+                console.error("Application update error:", error);
+
+                showError("Unable to update application: " + error.message);
+
+                button.disabled = false;
             }
-
-            if (action === "reject") {
-
-                if (!confirm("Are you sure you want to reject this application?")) {
-                    return;
-                }
-
-                applications[index].status = "Rejected";
-
-                if (!saveApplications(applications)) {
-
-                    alert("Unable to update application.");
-
-                    return;
-
-                }
-
-                alert("Application rejected successfully!");
-
-                displayApplications();
-
-            }
-
         });
 
         // ==================================================
-        // 10. SEARCH
+        // 13. SEARCH APPLICATIONS
         // ==================================================
 
         if (searchInput) {
-
             searchInput.addEventListener("input", displayApplications);
-
         }
 
-        // ==================================================
-        // 11. CLOSE MODAL
-        // ==================================================
-
-        document.getElementById("closeDetailsModal")
-            .addEventListener("click", function () {
-
-                modal.style.display = "none";
-
-            });
-
-        modal.addEventListener("click", function (event) {
-
-            if (event.target === modal) {
-
-                modal.style.display = "none";
-
-            }
-
-        });
-
-        displayApplications();
-
+        // Load dashboard data.
+        await loadApplications();
     }
 
-    // ==================================================
-    // 12. EXCEL EXPORT
-    // ==================================================
+    // ======================================================
+    // 14. EXCEL EXPORT
+    // ======================================================
 
     const exportButton = document.getElementById("exportExcel");
 
@@ -623,83 +796,38 @@ document.addEventListener("DOMContentLoaded", function () {
 
         exportButton.addEventListener("click", function () {
 
-            const applications = getApplications();
-
             if (applications.length === 0) {
-
-                alert("There are no applications to export!");
-
+                showError("There are no applications to export!");
                 return;
-
             }
 
             if (typeof XLSX === "undefined") {
-
-                alert("Excel library has not loaded. Check your internet connection.");
-
+                showError("Excel library has not loaded. Check your internet connection.");
                 return;
-
             }
 
             try {
 
-                const excelRows = applications.map((app, index) => ({
-
+                const rows = applications.map((app, index) => ({
                     "No.": index + 1,
-
                     "Reference Number": app.reference || "",
-
                     "Student Name": app.name || "",
-
                     "ID Number": app.idno || "",
-
                     "Phone Number": app.phone || "",
-
                     "Sub-location": app.subLocation || "",
-
                     "Village": app.village || "",
-
                     "School": app.school || "",
-
                     "Education Level": app.level || "",
-
                     "Admission Number": app.admission || "",
-
                     "Amount Requested": app.amount || "",
-
                     "Supporting Document": app.documentName || "",
-
                     "M-Pesa Number": app.mpesa || "",
-
                     "Reason": app.reason || "",
-
                     "Application Date": app.date || "",
-
                     "Status": getStatus(app)
-
                 }));
 
-                const worksheet = XLSX.utils.json_to_sheet(excelRows);
-
-                worksheet["!cols"] = [
-                    { wch: 7 },
-                    { wch: 20 },
-                    { wch: 25 },
-                    { wch: 15 },
-                    { wch: 18 },
-                    { wch: 20 },
-                    { wch: 20 },
-                    { wch: 28 },
-                    { wch: 18 },
-                    { wch: 20 },
-                    { wch: 18 },
-                    { wch: 25 },
-                    { wch: 18 },
-                    { wch: 35 },
-                    { wch: 23 },
-                    { wch: 15 }
-                ];
-
+                const worksheet = XLSX.utils.json_to_sheet(rows);
                 const workbook = XLSX.utils.book_new();
 
                 XLSX.utils.book_append_sheet(
@@ -717,17 +845,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 console.error("Excel export error:", error);
 
-                alert("Excel export failed. Please try again.");
-
+                showError("Excel export failed: " + error.message);
             }
-
         });
-
     }
 
-    // ==================================================
-    // 13. PDF EXPORT
-    // ==================================================
+    // ======================================================
+    // 15. PDF EXPORT
+    // ======================================================
 
     const pdfButton = document.getElementById("downloadPDF");
 
@@ -735,22 +860,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
         pdfButton.addEventListener("click", function () {
 
-            const applications = getApplications();
-
             if (applications.length === 0) {
-
-                alert("There are no applications to export!");
-
+                showError("There are no applications to export!");
                 return;
-
             }
 
             if (!window.jspdf || !window.jspdf.jsPDF) {
-
-                alert("PDF library has not loaded. Check your internet connection.");
-
+                showError("PDF library has not loaded.");
                 return;
-
             }
 
             try {
@@ -762,13 +879,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
 
                 doc.setFontSize(18);
-
                 doc.text("KEYIAN WARD BURSARY", 14, 18);
 
                 doc.setFontSize(11);
-
                 doc.text("Bursary Applications Report", 14, 27);
-
                 doc.text(
                     "Generated: " + new Date().toLocaleString(),
                     14,
@@ -776,29 +890,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 );
 
                 const rows = applications.map((app, index) => [
-
                     index + 1,
-
                     app.reference || "",
-
                     app.name || "",
-
                     app.idno || "",
-
                     app.phone || "",
-
                     app.school || "",
-
                     app.amount || "",
-
                     app.date || "",
-
                     getStatus(app)
-
                 ]);
 
-                const tableOptions = {
+                if (typeof doc.autoTable !== "function") {
+                    showError("PDF table library has not loaded.");
+                    return;
+                }
 
+                doc.autoTable({
                     startY: 40,
 
                     head: [[
@@ -824,24 +932,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     headStyles: {
                         fillColor: [30, 100, 60]
                     }
-
-                };
-
-                if (typeof doc.autoTable === "function") {
-
-                    doc.autoTable(tableOptions);
-
-                } else if (typeof window.jspdf.jsPDF.API.autoTable === "function") {
-
-                    doc.autoTable(tableOptions);
-
-                } else {
-
-                    alert("PDF table library has not loaded. Check AutoTable.");
-
-                    return;
-
-                }
+                });
 
                 doc.save("Keyian_Ward_Bursary_Report.pdf");
 
@@ -849,18 +940,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 console.error("PDF export error:", error);
 
-                alert("PDF export failed. Please try again.");
-
+                showError("PDF export failed: " + error.message);
             }
-
         });
-
     }
 
-    // ==================================================
-    // 14. SYSTEM READY
-    // ==================================================
-
-    console.log("KEYIAN WARD BURSARY SYSTEM READY");
+    console.log("KEYIAN WARD BURSARY SUPABASE SYSTEM READY");
 
 });
+
+

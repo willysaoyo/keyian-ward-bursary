@@ -9,6 +9,35 @@
     <title>Keyian Ward Bursary | Official Portal</title>
 
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .track-btn {
+            display: inline-block;
+            background: #087a35;
+            color: white;
+            padding: 11px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .track-btn:hover {
+            background: #055b27;
+        }
+
+        @media (max-width: 600px) {
+            .header-actions {
+                margin-top: 15px;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -19,12 +48,20 @@
 
             <div>
                 <h1>KEYIAN WARD BURSARY</h1>
-                <span>Official portal - Kilgoris Constituency</span>
+                <span>Official Portal - Kilgoris Constituency</span>
             </div>
 
-            <a href="admin.html" class="admin-btn">
-                Admin login
-            </a>
+            <div class="header-actions">
+
+                <a href="track.html" class="track-btn">
+                    Track Application
+                </a>
+
+                <a href="admin.html" class="admin-btn">
+                    Admin Login
+                </a>
+
+            </div>
 
         </div>
     </header>
@@ -34,13 +71,13 @@
         <!-- INTRODUCTION -->
         <section class="hero">
 
-            <h2>Apply online - All 11 sub-locations</h2>
+            <h2>Apply Online - All 11 Sub-locations</h2>
 
             <p>
                 Official sub-locations: Ildolisho, Mapashi,
                 Enoosaen, Isampin, Elang'ata osaen,
                 Olontare, Ilpashire, Ntuka, Sikawa,
-                Oldanyati, Kiikat. Village name is optional.
+                Oldanyati and Kiikat. Village name is optional.
             </p>
 
         </section>
@@ -52,7 +89,7 @@
 
                 <h3>1. Student Information</h3>
 
-                <label for="name">Full name *</label>
+                <label for="name">Full Name *</label>
 
                 <input
                     type="text"
@@ -65,18 +102,14 @@
 
                     <div>
                         <label for="idno">
-                            ID / birth certificate No *
+                            ID / Birth Certificate Number *
                         </label>
 
-                        <input
-                            type="text"
-                            id="idno"
-                            required
-                        >
+                        <input type="text" id="idno" required>
                     </div>
 
                     <div>
-                        <label for="phone">Phone number *</label>
+                        <label for="phone">Phone Number *</label>
 
                         <input
                             type="tel"
@@ -89,7 +122,7 @@
                 </div>
 
                 <label for="sub-location">
-                    Official sub-location * (required by chief)
+                    Official Sub-location *
                 </label>
 
                 <select id="sub-location" required>
@@ -112,31 +145,29 @@
 
                 </select>
 
-                <label for="village">
-                    Village name (optional)
-                </label>
+                <label for="village">Village Name (Optional)</label>
 
                 <input
                     type="text"
                     id="village"
-                    placeholder="e.g. Enooretet, Olasenua, Mumeita, Karda, Ogwedhi"
+                    placeholder="Enter your village name"
                 >
 
                 <!-- SCHOOL INFORMATION -->
                 <h3>2. School Information</h3>
 
                 <label for="school">
-                    School / college / university *
+                    School / College / University *
                 </label>
 
                 <input
                     type="text"
                     id="school"
                     required
-                    placeholder="e.g. Sikawa Secondary, Masai Mara University"
+                    placeholder="Enter your institution name"
                 >
 
-                <label for="level">Education level *</label>
+                <label for="level">Education Level *</label>
 
                 <select id="level" required>
 
@@ -145,7 +176,7 @@
                     <option value="secondary">Secondary</option>
                     <option value="college">College</option>
                     <option value="university">University</option>
-                    <option value="special needs">Special needs</option>
+                    <option value="special needs">Special Needs</option>
 
                 </select>
 
@@ -153,19 +184,19 @@
 
                     <div>
                         <label for="adm">
-                            Year / Admission No
+                            Year / Admission Number
                         </label>
 
                         <input
                             type="text"
                             id="adm"
-                            placeholder="Form, Year"
+                            placeholder="Enter year or admission number"
                         >
                     </div>
 
                     <div>
                         <label for="amount">
-                            Amount requested (Ksh) *
+                            Amount Requested (Ksh) *
                         </label>
 
                         <input
@@ -183,20 +214,20 @@
                 <h3>3. Supporting Document</h3>
 
                 <label for="feefile">
-                    Fee structure / admission letter *
-                    (photo or PDF)
+                    Fee Structure / Admission Letter *
+                    (PDF, JPG, PNG or WEBP)
                 </label>
 
                 <input
                     type="file"
                     id="feefile"
-                    accept="image/*,.pdf"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp"
                     required
                 >
 
                 <label for="m-pesa">
-                    M-Pesa transaction code
-                    (if you paid commitment fee)
+                    M-Pesa Transaction Code
+                    (If you paid a commitment fee)
                 </label>
 
                 <input
@@ -206,32 +237,34 @@
                 >
 
                 <label for="reason">
-                    Reason for applying *
+                    Reason for Applying *
                 </label>
 
                 <textarea
                     id="reason"
                     rows="4"
                     required
-                    placeholder="Briefly explain your need..."
+                    placeholder="Briefly explain your financial need..."
                 ></textarea>
 
-                <!-- SUBMIT -->
+                <!-- SUBMIT BUTTON -->
                 <button type="submit" id="submitBtn">
-                    Submit application
+                    Submit Application
                 </button>
 
                 <p
                     id="loader"
                     class="status"
-                    style="display: none"
+                    style="display: none;"
                 >
-                    Submitting... please wait.
+                    Submitting... Please wait.
                 </p>
 
                 <p
                     id="successMsg"
                     class="success-msg"
+                    role="status"
+                    aria-live="polite"
                 ></p>
 
             </form>
@@ -239,18 +272,18 @@
             <!-- INFORMATION BOX -->
             <aside class="info-box">
 
-                <h4>Why sub-location only is best</h4>
+                <h4>Why Sub-location Only Is Best</h4>
 
                 <ul>
-                    <li>Official - matches ID & chief's records</li>
-                    <li>Fair - bursary shared equally per sub-location</li>
-                    <li>No village left out - village is optional free text</li>
-                    <li>Clean report for MCA & County Government</li>
+                    <li>Official - matches ID and chief's records.</li>
+                    <li>Fair - helps organise applications by sub-location.</li>
+                    <li>No village left out - village name is optional.</li>
+                    <li>Organised reports for bursary administrators.</li>
                 </ul>
 
                 <hr>
 
-                <h4>11 Official Sub-locations of Keyian:</h4>
+                <h4>11 Official Sub-locations of Keyian</h4>
 
                 <p>
                     1. Ildolisho<br>
@@ -267,14 +300,20 @@
                 </p>
 
                 <p class="small-note">
-                    All small villages like Enooretet,
-                    Mumeita, Olasenua, Karda, Enkiloriti,
-                    Isojo, Olchurai, Nentekeny and Ogwedhi
-                    fall inside these 11 sub-locations.
+                    Small villages such as Enooretet, Mumeita,
+                    Olasenua, Karda, Enkiloriti, Isojo,
+                    Olchurai, Nentekeny and Ogwedhi can be
+                    entered under the appropriate sub-location.
                 </p>
 
+                <a href="track.html" class="track-btn">
+                    Track Your Application
+                </a>
+
+                <br><br>
+
                 <a href="admin.html" class="view-admin">
-                    Open admin dashboard
+                    Open Admin Portal
                 </a>
 
             </aside>
@@ -288,6 +327,13 @@
         Keyian Ward Bursary | Narok County Government
     </footer>
 
+    <!-- SUPABASE LIBRARY -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- SUPABASE CONNECTION -->
+    <script src="supabase.js"></script>
+
+    <!-- MAIN JAVASCRIPT -->
     <script src="script.js"></script>
 
 </body>

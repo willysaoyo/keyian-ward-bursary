@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Application | Keyian Ward Bursary</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .tracking-container {
+            max-width: 550px;
+            margin: 60px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+        }
+
+        .tracking-container h2 {
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .tracking-container p {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .tracking-container label {
+            display: block;
+            margin: 15px 0 7px;
+            font-weight: bold;
+        }
+
+        .tracking-container input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .tracking-container button {
+            width: 100%;
+            padding: 13px;
+            margin-top: 22px;
+            background: #087a35;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .tracking-container button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #trackingResult {
+            margin-top: 22px;
+            padding: 15px;
+            border-radius: 7px;
+            display: none;
+        }
+
+        .result-success {
+            display: block !important;
+            background: #e8f7ed;
+            color: #145c2e;
+        }
+
+        .result-error {
+            display: block !important;
+            background: #fdeaea;
+            color: #9b2020;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 22px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>KEYIAN WARD BURSARY</h1>
+        <p>Student Application Tracking Portal</p>
+    </header>
+
+    <main class="tracking-container">
+
+        <h2>Track Your Application</h2>
+
+        <p>
+            Enter your application reference number and
+            National ID number to check your application status.
+        </p>
+
+        <form id="trackingForm">
+
+            <label for="referenceNumber">
+                Application Reference Number
+            </label>
+
+            <input
+                type="text"
+                id="referenceNumber"
+                placeholder="Example: KWB-123456789"
+                required
+            >
+
+            <label for="idNumber">
+                National ID Number
+            </label>
+
+            <input
+                type="text"
+                id="idNumber"
+                placeholder="Enter your National ID number"
+                required
+            >
+
+            <button type="submit" id="trackBtn">
+                Check Application Status
+            </button>
+
+        </form>
+
+        <div id="trackingResult" role="status" aria-live="polite"></div>
+
+        <a href="index.html" class="back-link">
+            Back to Application Page
+        </a>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+
+    <script>
+        const trackingForm = document.getElementById("trackingForm");
+        const trackingResult = document.getElementById("trackingResult");
+        const trackBtn = document.getElementById("trackBtn");
+
+        trackingForm.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const referenceNumber =
+                document.getElementById("referenceNumber").value.trim();
+
+            const idNumber =
+                document.getElementById("idNumber").value.trim();
+
+            trackingResult.style.display = "none";
+            trackingResult.textContent = "";
+
+            trackBtn.disabled = true;
+            trackBtn.textContent = "Checking...";
+
+            try {
+                const { data, error } = await window.supabaseClient.rpc(
+                    "track_bursary_application",
+                    {
+                        p_reference_number: referenceNumber,
+                        p_id_number: idNumber
+                    }
+                );
+
+                if (error) {
+                    throw error;
+                }
+
+                if (!data || data.length === 0) {
+                    trackingResult.className = "result-error";
+                    trackingResult.textContent =
+                        "Application not found. Please check your reference number and National ID number.";
+                } else {
+                    const application = data[0];
+
+                    const status = document.createElement("p");
+                    status.textContent =
+                        "Application Status: " + application.application_status;
+
+                    const date = document.createElement("p");
+                    date.textContent =
+                        "Application Date: " +
+                        new Date(application.application_date).toLocaleDateString();
+
+                    trackingResult.className = "result-success";
+                    trackingResult.replaceChildren(status, date);
+                }
+
+            } catch (error) {
+                console.error("Tracking error:", error);
+
+                trackingResult.className = "result-error";
+                trackingResult.textContent =
+                    "Unable to check your application. Please try again later.";
+            }
+
+            trackBtn.disabled = false;
+            trackBtn.textContent = "Check Application Status";
+        });
+    </script>
+
+</body>
+</html>
