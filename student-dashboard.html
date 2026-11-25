@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | Keyian Ward Bursary</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .dashboard {
+            max-width: 900px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+        }
+        h1 { color: #176b39; }
+        .application {
+            border: 1px solid #ddd;
+            padding: 18px;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+        button {
+            background: #176b39;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #message { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+    <h1>Student Dashboard</h1>
+    <p>Welcome to Keyian Ward Bursary Portal.</p>
+
+    <p id="studentEmail">Checking account...</p>
+
+    <h2>My Applications</h2>
+    <div id="applications">
+        Loading your applications...
+    </div>
+
+    <br>
+    <button id="logoutBtn">Logout</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+
+    const client = window.supabaseClient;
+    const applicationsDiv = document.getElementById("applications");
+
+    if (!client) {
+        applicationsDiv.textContent = "Supabase connection failed.";
+        return;
+    }
+
+    const { data: { user }, error } = await client.auth.getUser();
+
+    if (error || !user) {
+        window.location.href = "student-login.html";
+        return;
+    }
+
+    document.getElementById("studentEmail").textContent =
+        "Logged in as: " + user.email;
+
+    const { data, error: appError } = await client
+        .from("applications")
+        .select("*")
+        .eq("user_id", user.id);
+
+    if (appError) {
+        applicationsDiv.textContent =
+            "Could not load applications: " + appError.message;
+        return;
+    }
+
+    applicationsDiv.innerHTML = "";
+
+    if (!data || data.length === 0) {
+        applicationsDiv.textContent = "No applications found.";
+        return;
+    }
+
+    data.forEach(function (app) {
+        const card = document.createElement("div");
+        card.className = "application";
+
+        const fields = [
+            ["Reference Number", app.reference_number || app.ref_number || app.reference || "Not available"],
+            ["Name", app.full_name || app.student_name || app.name || "Not available"],
+            ["School", app.school_name || app.school || "Not available"],
+            ["Sub-location", app.sublocation || app.sub_location || "Not available"],
+            ["Amount Requested", app.amount_requested || app.amount || "Not available"],
+            ["Status", app.status || "Pending"]
+        ];
+
+        fields.forEach(function (field) {
+            const p = document.createElement("p");
+            p.textContent = field[0] + ": " + field[1];
+            card.appendChild(p);
+        });
+
+        applicationsDiv.appendChild(card);
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async function () {
+        await client.auth.signOut();
+        window.location.href = "student-login.html";
+    });
+});
+</script>
+
+</body>
+</html>
