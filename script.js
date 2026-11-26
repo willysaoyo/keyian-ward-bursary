@@ -162,6 +162,74 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     // ======================================================
+    // 3B. ADMIN FORGOT PASSWORD
+    // ======================================================
+
+    const forgotPasswordLink = document.getElementById(
+        "forgot-password-link"
+    );
+
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener("click", async function (event) {
+            event.preventDefault();
+
+            const message = document.getElementById(
+                "forgot-password-message"
+            );
+
+            forgotPasswordLink.style.pointerEvents = "none";
+            forgotPasswordLink.textContent = "Sending reset email...";
+
+            if (message) {
+                message.textContent = "";
+                message.style.color = "#333";
+            }
+
+            try {
+                const { error } = await supabase.auth.resetPasswordForEmail(
+                    ADMIN_EMAIL,
+                    {
+                        redirectTo:
+                            "https://willysaoyo.github.io/keyian-ward-bursary/reset-password.html"
+                    }
+                );
+
+                if (error) throw error;
+
+                if (message) {
+                    message.style.color = "green";
+                    message.textContent =
+                        "Password reset email sent. Check your administrator email inbox.";
+                }
+
+                alert(
+                    "Password reset email sent to " +
+                    ADMIN_EMAIL +
+                    ". Check your inbox and follow the reset link."
+                );
+
+            } catch (error) {
+                console.error("Password reset email error:", error);
+
+                if (message) {
+                    message.style.color = "red";
+                    message.textContent =
+                        "Unable to send reset email: " + error.message;
+                }
+
+                alert(
+                    "Unable to send password reset email: " +
+                    error.message
+                );
+
+            } finally {
+                forgotPasswordLink.style.pointerEvents = "auto";
+                forgotPasswordLink.textContent = "Forgot Password?";
+            }
+        });
+    }
+
+    // ======================================================
     // 4. STUDENT APPLICATION SUBMISSION
     // ======================================================
 

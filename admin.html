@@ -4,76 +4,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Keyian Ward Bursary | Admin Portal</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
     <header>
         <div class="header-inner">
             <div>
                 <h1>KEYIAN WARD BURSARY</h1>
                 <span>Admin Portal - Kilgoris Constituency</span>
             </div>
-
-            <a href="index.html" class="admin-btn">
-                Back to Application
-            </a>
+            <a href="index.html" class="admin-btn">Back to Application</a>
         </div>
     </header>
 
     <main class="page-shell">
-
         <section class="hero">
             <h2>Admin Login</h2>
             <p>Enter your credentials to access the admin portal.</p>
         </section>
 
         <section class="form-section">
-
             <form id="admin-login-form">
-
                 <label for="username">Username *</label>
-                <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    required
-                    placeholder="Enter your username"
-                >
+                <input type="text" id="username" name="username"
+                    required placeholder="Enter your username">
 
                 <label for="password">Password *</label>
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                    placeholder="Enter your password"
-                >
+                <input type="password" id="password" name="password"
+                    required placeholder="Enter your password">
 
                 <button type="submit">Login</button>
 
+                <p>
+                    <a href="#" id="forgot-password-link">Forgot Password?</a>
+                </p>
+
+                <p id="forgot-password-message"></p>
             </form>
-
         </section>
-
     </main>
 
-    <footer>
-        &copy; 2026 Keyian Ward Bursary. All rights reserved.
-    </footer>
+    <footer>&copy; 2026 Keyian Ward Bursary. All rights reserved.</footer>
 
-    <!-- Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- Supabase Connection -->
     <script src="supabase.js"></script>
-
-    <!-- Main JavaScript -->
     <script src="script.js"></script>
-
 </body>
 </html>
