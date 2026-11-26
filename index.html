@@ -8,33 +8,298 @@
 
     <title>Keyian Ward Bursary | Official Portal</title>
 
+    <meta name="description"
+        content="Keyian Ward Bursary online portal. Apply for bursary support, track your application and access student services.">
+
     <link rel="stylesheet" href="style.css">
 
     <style>
-        .header-actions {
+        :root {
+            --green: #087a35;
+            --dark-green: #075526;
+            --light-green: #eaf6ee;
+            --gold: #e6b422;
+            --text: #26332b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: var(--text);
+            background: #f5f8f6;
+        }
+
+        header {
+            background: white;
+            border-bottom: 3px solid var(--green);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: auto;
+            padding: 18px 25px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand h1 {
+            margin: 0;
+            color: var(--dark-green);
+            font-size: 25px;
+        }
+
+        .brand p {
+            margin: 6px 0 0;
+            color: #66736a;
+            font-size: 13px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 22px;
             flex-wrap: wrap;
         }
 
-        .track-btn {
-            display: inline-block;
-            background: #087a35;
+        .nav-links a {
+            text-decoration: none;
+            color: #26332b;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .nav-links a:hover {
+            color: var(--green);
+        }
+
+        .hero {
+            background: linear-gradient(120deg, #064c25, #09823c);
             color: white;
-            padding: 11px 18px;
+            padding: 75px 25px;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 850px;
+            margin: auto;
+        }
+
+        .hero-label {
+            color: #ffe28a;
+            font-weight: bold;
+            letter-spacing: 2px;
+            font-size: 13px;
+        }
+
+        .hero h2 {
+            font-size: 39px;
+            margin: 18px 0;
+            line-height: 1.2;
+        }
+
+        .hero p {
+            max-width: 700px;
+            margin: auto;
+            line-height: 1.8;
+            font-size: 16px;
+            color: #e5f3e9;
+        }
+
+        .hero-actions {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 23px;
             border-radius: 6px;
             text-decoration: none;
             font-weight: bold;
+            transition: 0.2s;
         }
 
-        .track-btn:hover {
-            background: #055b27;
+        .btn-primary {
+            background: var(--gold);
+            color: #172b1d;
         }
 
-        @media (max-width: 600px) {
-            .header-actions {
-                margin-top: 15px;
+        .btn-secondary {
+            background: white;
+            color: var(--dark-green);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 55px 22px;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .section-title h2 {
+            color: var(--dark-green);
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .section-title p {
+            color: #68766d;
+            line-height: 1.6;
+        }
+
+        .services {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 22px;
+        }
+
+        .service-card {
+            background: white;
+            padding: 30px 22px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 3px 14px rgba(0,0,0,0.06);
+            border-top: 4px solid var(--green);
+        }
+
+        .service-icon {
+            font-size: 35px;
+            margin-bottom: 15px;
+        }
+
+        .service-card h3 {
+            color: var(--dark-green);
+        }
+
+        .service-card p {
+            color: #68766d;
+            line-height: 1.7;
+            font-size: 14px;
+            min-height: 65px;
+        }
+
+        .service-card a {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 11px 18px;
+            background: var(--green);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .service-card a:hover {
+            background: var(--dark-green);
+        }
+
+        .information {
+            background: white;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+            align-items: start;
+        }
+
+        .info-panel {
+            background: var(--light-green);
+            padding: 25px;
+            border-radius: 9px;
+        }
+
+        .info-panel h3 {
+            color: var(--dark-green);
+            margin-top: 0;
+        }
+
+        .info-panel li {
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .locations {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .locations li {
+            background: white;
+            padding: 12px;
+            border-radius: 5px;
+            border-left: 3px solid var(--green);
+            font-size: 14px;
+        }
+
+        .notice {
+            margin-top: 30px;
+            padding: 20px;
+            background: #fff8e5;
+            border-left: 5px solid var(--gold);
+            border-radius: 5px;
+            line-height: 1.7;
+        }
+
+        footer {
+            background: #063d20;
+            color: white;
+            text-align: center;
+            padding: 25px 15px;
+            font-size: 14px;
+        }
+
+        footer p {
+            margin: 7px;
+        }
+
+        @media (max-width: 750px) {
+            .header-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .nav-links {
+                justify-content: center;
+            }
+
+            .hero {
+                padding: 55px 20px;
+            }
+
+            .hero h2 {
+                font-size: 29px;
+            }
+
+            .services,
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .locations {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -46,277 +311,202 @@
     <header>
         <div class="header-inner">
 
-            <div>
+            <div class="brand">
                 <h1>KEYIAN WARD BURSARY</h1>
-                <span>Official Portal - Kilgoris Constituency</span>
+                <p>Official Online Bursary Application Portal</p>
             </div>
 
-            <div class="header-actions">
+            <nav class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="#services">Student Services</a>
+                <a href="#about">About</a>
+                <a href="#locations">Sub-locations</a>
+            </nav>
 
-                <a href="track.html" class="track-btn">
-                    Track Application
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <span class="hero-label">
+                EDUCATION SUPPORT • OPPORTUNITY • DEVELOPMENT
+            </span>
+
+            <h2>Supporting Education, Building a Better Future</h2>
+
+            <p>
+                Welcome to the Keyian Ward Bursary Official Online Portal.
+                Access student services, submit your bursary application
+                and follow your application progress conveniently online.
+            </p>
+
+            <div class="hero-actions">
+
+                <a href="apply.html" class="btn btn-primary">
+                    Apply for Bursary
                 </a>
 
-                <a href="admin.html" class="admin-btn">
-                    Admin Login
+                <a href="track.html" class="btn btn-secondary">
+                    Track Application
                 </a>
 
             </div>
 
         </div>
-    </header>
 
-    <main class="page-shell">
+    </section>
 
-        <!-- INTRODUCTION -->
-        <section class="hero">
+    <!-- STUDENT SERVICES -->
+    <main>
 
-            <h2>Apply Online - All 11 Sub-locations</h2>
+        <section class="container" id="services">
 
-            <p>
-                Official sub-locations: Ildolisho, Mapashi,
-                Enoosaen, Isampin, Elang'ata osaen,
-                Olontare, Ilpashire, Ntuka, Sikawa,
-                Oldanyati and Kiikat. Village name is optional.
-            </p>
+            <div class="section-title">
+                <h2>Student Services</h2>
+                <p>
+                    Choose the service you want to access.
+                </p>
+            </div>
+
+            <div class="services">
+
+                <div class="service-card">
+
+                    <div class="service-icon">📝</div>
+
+                    <h3>Apply for Bursary</h3>
+
+                    <p>
+                        Complete your online bursary application
+                        and submit the required supporting documents.
+                    </p>
+
+                    <a href="apply.html">Start Application</a>
+
+                </div>
+
+                <div class="service-card">
+
+                    <div class="service-icon">🔎</div>
+
+                    <h3>Track Application</h3>
+
+                    <p>
+                        Check the progress and status of your
+                        bursary application using your reference number.
+                    </p>
+
+                    <a href="track.html">Track Now</a>
+
+                </div>
+
+                <div class="service-card">
+
+                    <div class="service-icon">🎓</div>
+
+                    <h3>Student Login</h3>
+
+                    <p>
+                        Access your student account, personal
+                        application information and notifications.
+                    </p>
+
+                    <a href="student-login.html">Student Login</a>
+
+                </div>
+
+            </div>
 
         </section>
 
-        <!-- APPLICATION FORM -->
-        <section class="form-section">
+        <!-- ABOUT AND ELIGIBILITY -->
+        <section class="information" id="about">
 
-            <form id="bursaryForm">
+            <div class="container">
 
-                <h3>1. Student Information</h3>
+                <div class="section-title">
+                    <h2>About Keyian Ward Bursary</h2>
+                    <p>
+                        Promoting access to education through bursary support.
+                    </p>
+                </div>
 
-                <label for="name">Full Name *</label>
+                <div class="info-grid">
 
-                <input
-                    type="text"
-                    id="name"
-                    required
-                    placeholder="As per ID / birth certificate"
-                >
+                    <div class="info-panel">
 
-                <div class="row two-col">
+                        <h3>Our Purpose</h3>
 
-                    <div>
-                        <label for="idno">
-                            ID / Birth Certificate Number *
-                        </label>
+                        <p>
+                            The Keyian Ward Bursary Portal is designed
+                            to make bursary application services easier
+                            to access, more organised and convenient
+                            for students and administrators.
+                        </p>
 
-                        <input type="text" id="idno" required>
+                        <p>
+                            Students can apply online, submit supporting
+                            documents and follow their application progress.
+                        </p>
+
                     </div>
 
-                    <div>
-                        <label for="phone">Phone Number *</label>
+                    <div class="info-panel">
 
-                        <input
-                            type="tel"
-                            id="phone"
-                            required
-                            placeholder="07xxxxxxxx"
-                        >
+                        <h3>Application Guidelines</h3>
+
+                        <ul>
+                            <li>Provide accurate personal information.</li>
+                            <li>Select your official sub-location.</li>
+                            <li>Enter your school or institution details.</li>
+                            <li>Upload the required supporting document.</li>
+                            <li>Keep your application reference number safe.</li>
+                        </ul>
+
                     </div>
 
                 </div>
 
-                <label for="sub-location">
-                    Official Sub-location *
-                </label>
-
-                <select id="sub-location" required>
-
-                    <option value="">
-                        -- Select your official sub-location --
-                    </option>
-
-                    <option value="Ildolisho">Ildolisho</option>
-                    <option value="Mapashi">Mapashi</option>
-                    <option value="Enoosaen">Enoosaen</option>
-                    <option value="Isampin">Isampin</option>
-                    <option value="Elang'ata osaen">Elang'ata osaen</option>
-                    <option value="Olontare">Olontare</option>
-                    <option value="Ilpashire">Ilpashire</option>
-                    <option value="Ntuka">Ntuka</option>
-                    <option value="Sikawa">Sikawa</option>
-                    <option value="Oldanyati">Oldanyati</option>
-                    <option value="Kiikat">Kiikat</option>
-
-                </select>
-
-                <label for="village">Village Name (Optional)</label>
-
-                <input
-                    type="text"
-                    id="village"
-                    placeholder="Enter your village name"
-                >
-
-                <!-- SCHOOL INFORMATION -->
-                <h3>2. School Information</h3>
-
-                <label for="school">
-                    School / College / University *
-                </label>
-
-                <input
-                    type="text"
-                    id="school"
-                    required
-                    placeholder="Enter your institution name"
-                >
-
-                <label for="level">Education Level *</label>
-
-                <select id="level" required>
-
-                    <option value="">-- Select education level --</option>
-                    <option value="primary">Primary</option>
-                    <option value="secondary">Secondary</option>
-                    <option value="college">College</option>
-                    <option value="university">University</option>
-                    <option value="special needs">Special Needs</option>
-
-                </select>
-
-                <div class="row two-col">
-
-                    <div>
-                        <label for="adm">
-                            Year / Admission Number
-                        </label>
-
-                        <input
-                            type="text"
-                            id="adm"
-                            placeholder="Enter year or admission number"
-                        >
-                    </div>
-
-                    <div>
-                        <label for="amount">
-                            Amount Requested (Ksh) *
-                        </label>
-
-                        <input
-                            type="number"
-                            id="amount"
-                            min="1"
-                            required
-                            placeholder="e.g. 10000"
-                        >
-                    </div>
-
+                <div class="notice">
+                    <strong>Important Notice:</strong>
+                    Application opening dates, closing dates, eligibility
+                    requirements and award decisions should be confirmed
+                    through the authorised bursary administration.
                 </div>
 
-                <!-- SUPPORTING DOCUMENT -->
-                <h3>3. Supporting Document</h3>
+            </div>
 
-                <label for="feefile">
-                    Fee Structure / Admission Letter *
-                    (PDF, JPG, PNG or WEBP)
-                </label>
+        </section>
 
-                <input
-                    type="file"
-                    id="feefile"
-                    accept=".pdf,.jpg,.jpeg,.png,.webp"
-                    required
-                >
+        <!-- OFFICIAL SUB-LOCATIONS -->
+        <section class="container" id="locations">
 
-                <label for="m-pesa">
-                    M-Pesa Transaction Code
-                    (If you paid a commitment fee)
-                </label>
-
-                <input
-                    type="text"
-                    id="m-pesa"
-                    placeholder="e.g. QGH7..."
-                >
-
-                <label for="reason">
-                    Reason for Applying *
-                </label>
-
-                <textarea
-                    id="reason"
-                    rows="4"
-                    required
-                    placeholder="Briefly explain your financial need..."
-                ></textarea>
-
-                <!-- SUBMIT BUTTON -->
-                <button type="submit" id="submitBtn">
-                    Submit Application
-                </button>
-
-                <p
-                    id="loader"
-                    class="status"
-                    style="display: none;"
-                >
-                    Submitting... Please wait.
-                </p>
-
-                <p
-                    id="successMsg"
-                    class="success-msg"
-                    role="status"
-                    aria-live="polite"
-                ></p>
-
-            </form>
-
-            <!-- INFORMATION BOX -->
-            <aside class="info-box">
-
-                <h4>Why Sub-location Only Is Best</h4>
-
-                <ul>
-                    <li>Official - matches ID and chief's records.</li>
-                    <li>Fair - helps organise applications by sub-location.</li>
-                    <li>No village left out - village name is optional.</li>
-                    <li>Organised reports for bursary administrators.</li>
-                </ul>
-
-                <hr>
-
-                <h4>11 Official Sub-locations of Keyian</h4>
-
+            <div class="section-title">
+                <h2>Official Keyian Ward Sub-locations</h2>
                 <p>
-                    1. Ildolisho<br>
-                    2. Mapashi<br>
-                    3. Enoosaen<br>
-                    4. Isampin<br>
-                    5. Elang'ata osaen<br>
-                    6. Olontare<br>
-                    7. Ilpashire<br>
-                    8. Ntuka<br>
-                    9. Sikawa<br>
-                    10. Oldanyati<br>
-                    11. Kiikat
+                    Students can select their appropriate
+                    sub-location when applying.
                 </p>
+            </div>
 
-                <p class="small-note">
-                    Small villages such as Enooretet, Mumeita,
-                    Olasenua, Karda, Enkiloriti, Isojo,
-                    Olchurai, Nentekeny and Ogwedhi can be
-                    entered under the appropriate sub-location.
-                </p>
+            <ul class="locations">
 
-                <a href="track.html" class="track-btn">
-                    Track Your Application
-                </a>
+                <li>1. Ildolisho</li>
+                <li>2. Mapashi</li>
+                <li>3. Enoosaen</li>
+                <li>4. Isampin</li>
+                <li>5. Elang'ata osaen</li>
+                <li>6. Olontare</li>
+                <li>7. Ilpashire</li>
+                <li>8. Ntuka</li>
+                <li>9. Sikawa</li>
+                <li>10. Oldanyati</li>
+                <li>11. Kiikat</li>
 
-                <br><br>
-
-                <a href="admin.html" class="view-admin">
-                    Open Admin Portal
-                </a>
-
-            </aside>
+            </ul>
 
         </section>
 
@@ -324,17 +514,14 @@
 
     <!-- FOOTER -->
     <footer>
-        Keyian Ward Bursary | Narok County Government
+
+        <p><strong>KEYIAN WARD BURSARY</strong></p>
+
+        <p>Official Online Bursary Application Portal</p>
+
+        <p>© 2026 Keyian Ward Bursary. All rights reserved.</p>
+
     </footer>
-
-    <!-- SUPABASE LIBRARY -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- SUPABASE CONNECTION -->
-    <script src="supabase.js"></script>
-
-    <!-- MAIN JAVASCRIPT -->
-    <script src="script.js"></script>
 
 </body>
 </html>

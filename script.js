@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     const ADMIN_EMAIL = "wj7495751@gmail.com";
     const ADMIN_USERNAME = "KEYIAN";
+    const ADMIN_USER_ID = "a9ef7d67-61c8-40c6-b867-2331b37ba5be";
 
     const BUCKET_NAME = "bursary-documents";
     const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -21,8 +22,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     let applications = [];
 
     if (!supabase) {
-        alert("Supabase is not connected. Please check supabase.js.");
         console.error("Supabase client not found.");
+        alert("Supabase is not connected. Please check supabase.js.");
         return;
     }
 
@@ -58,6 +59,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     function convertApplication(row) {
         return {
             id: row.id,
+            userId: row.user_id,
             reference: row.reference_number,
             name: row.student_name,
             idno: row.id_number,
@@ -95,9 +97,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     const loginForm = document.getElementById("admin-login-form");
 
     if (loginForm) {
-
         loginForm.addEventListener("submit", async function (event) {
-
             event.preventDefault();
 
             const username = fieldValue("username");
@@ -114,7 +114,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 return;
             }
 
-            const loginButton = loginForm.querySelector('button[type="submit"]');
+            const loginButton = loginForm.querySelector(
+                'button[type="submit"]'
+            );
 
             if (loginButton) {
                 loginButton.disabled = true;
@@ -122,26 +124,31 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
 
             try {
-
-                const { data, error } = await supabase.auth.signInWithPassword({
-                    email: ADMIN_EMAIL,
-                    password: password
-                });
+                const { data, error } =
+                    await supabase.auth.signInWithPassword({
+                        email: ADMIN_EMAIL,
+                        password: password
+                    });
 
                 if (error) throw error;
 
-                if (!data.user || data.user.email !== ADMIN_EMAIL) {
+                if (
+                    !data.user ||
+                    data.user.email !== ADMIN_EMAIL ||
+                    data.user.id !== ADMIN_USER_ID
+                ) {
                     await supabase.auth.signOut();
-                    throw new Error("Unauthorized administrator account.");
+                    throw new Error(
+                        "This account is not authorized as the administrator."
+                    );
                 }
 
-                alert("Login successful!");
+                alert("Administrator login successful!");
 
                 window.location.href = "admin-dashboard.html";
 
             } catch (error) {
-
-                console.error("Login error:", error);
+                console.error("Admin login error:", error);
 
                 showError("Login failed: " + error.message);
 
@@ -160,12 +167,50 @@ document.addEventListener("DOMContentLoaded", async function () {
     const bursaryForm = document.getElementById("bursaryForm");
 
     if (bursaryForm) {
-
         bursaryForm.addEventListener("submit", async function (event) {
-
             event.preventDefault();
 
+            const submitButton = bursaryForm.querySelector(
+                '[type="submit"]'
+            );
+
+            const loader = document.getElementById("loader");
+            const successMsg = document.getElementById("successMsg");
             const fileInput = document.getElementById("feefile");
+
+            if (successMsg) successMsg.innerHTML = "";
+
+            // ------------------------------------------
+            // CHECK STUDENT LOGIN
+            // ------------------------------------------
+
+            let user;
+
+            try {
+                const { data, error } = await supabase.auth.getUser();
+
+                if (error) throw error;
+
+                user = data.user;
+
+                if (!user) {
+                    showError(
+                        "Please log in to your student account before applying."
+                    );
+
+                    window.location.href = "student-login.html";
+                    return;
+                }
+
+            } catch (error) {
+                console.error("Student authentication error:", error);
+                showError("Unable to verify your login: " + error.message);
+                return;
+            }
+
+            // ------------------------------------------
+            // CHECK SUPPORTING DOCUMENT
+            // ------------------------------------------
 
             if (!fileInput || !fileInput.files.length) {
                 showError("Please upload your supporting document.");
@@ -182,12 +227,16 @@ document.addEventListener("DOMContentLoaded", async function () {
             ];
 
             if (!allowedTypes.includes(file.type)) {
-                showError("Please upload a PDF, JPG, PNG or WEBP document.");
+                showError(
+                    "Please upload a PDF, JPG, PNG or WEBP document."
+                );
                 return;
             }
 
             if (file.size > MAX_FILE_SIZE) {
-                showError("Your document is too large. Maximum size is 5 MB.");
+                showError(
+                    "Your document is too large. Maximum size is 5 MB."
+                );
                 return;
             }
 
@@ -196,7 +245,12 @@ document.addEventListener("DOMContentLoaded", async function () {
                 return;
             }
 
+            // ------------------------------------------
+            // COLLECT APPLICATION INFORMATION
+            // ------------------------------------------
+
             const applicationData = {
+                user_id: user.id,
                 student_name: fieldValue("name"),
                 id_number: fieldValue("idno"),
                 phone: fieldValue("phone"),
@@ -230,24 +284,19 @@ document.addEventListener("DOMContentLoaded", async function () {
                 return;
             }
 
-            const submitButton = bursaryForm.querySelector('[type="submit"]');
-            const loader = document.getElementById("loader");
-            const successMsg = document.getElementById("successMsg");
-
             if (submitButton) {
                 submitButton.disabled = true;
                 submitButton.textContent = "Submitting...";
             }
 
             if (loader) loader.style.display = "block";
-            if (successMsg) successMsg.textContent = "";
 
             let uploadedPath = null;
 
             try {
 
                 // ------------------------------------------
-                // UPLOAD SUPPORTING DOCUMENT
+                // UPLOAD DOCUMENT TO STUDENT'S OWN FOLDER
                 // ------------------------------------------
 
                 const safeFileName = file.name.replace(
@@ -256,6 +305,8 @@ document.addEventListener("DOMContentLoaded", async function () {
                 );
 
                 uploadedPath =
+                    user.id +
+                    "/" +
                     applicationData.reference_number +
                     "/" +
                     Date.now() +
@@ -285,34 +336,167 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                 if (insertError) throw insertError;
 
+                // ------------------------------------------
+                // STUDENT SUCCESS CONFIRMATION
+                // ------------------------------------------
+
                 const reference = applicationData.reference_number;
 
                 if (successMsg) {
-                    successMsg.textContent =
-                        "Application submitted successfully! Your reference number is " +
-                        reference;
+                    successMsg.innerHTML = `
+                        <div style="
+                            background:#e8f7ed;
+                            border:2px solid #15803d;
+                            border-radius:12px;
+                            padding:25px;
+                            margin:20px 0;
+                            text-align:center;
+                            color:#14532d;
+                        ">
+
+                            <h2 style="color:#15803d;">
+                                Application Submitted Successfully!
+                            </h2>
+
+                            <p>
+                                Your bursary application has been received.
+                            </p>
+
+                            <p>
+                                Please keep your reference number safe.
+                                You will need it to track your application.
+                            </p>
+
+                            <div style="
+                                background:white;
+                                border:2px dashed #15803d;
+                                padding:15px;
+                                border-radius:8px;
+                                margin:15px 0;
+                            ">
+                                <p style="margin:0;">
+                                    YOUR REFERENCE NUMBER
+                                </p>
+
+                                <h2 style="
+                                    color:#123b27;
+                                    overflow-wrap:anywhere;
+                                ">
+                                    ${escapeHTML(reference)}
+                                </h2>
+                            </div>
+
+                            <button
+                                type="button"
+                                id="copyReferenceButton"
+                                style="
+                                    background:#15803d;
+                                    color:white;
+                                    border:none;
+                                    padding:12px 20px;
+                                    border-radius:6px;
+                                    cursor:pointer;
+                                    margin:5px;
+                                ">
+                                Copy Reference Number
+                            </button>
+
+                            <a href="track.html"
+                                style="
+                                    display:inline-block;
+                                    background:#123b27;
+                                    color:white;
+                                    padding:12px 20px;
+                                    border-radius:6px;
+                                    text-decoration:none;
+                                    margin:5px;
+                                ">
+                                Track Your Application
+                            </a>
+                        </div>
+                    `;
+
+                    const copyButton = document.getElementById(
+                        "copyReferenceButton"
+                    );
+
+                    if (copyButton) {
+                        copyButton.addEventListener(
+                            "click",
+                            async function () {
+                                try {
+                                    if (
+                                        navigator.clipboard &&
+                                        window.isSecureContext
+                                    ) {
+                                        await navigator.clipboard.writeText(
+                                            reference
+                                        );
+                                    } else {
+                                        const temporaryInput =
+                                            document.createElement("textarea");
+
+                                        temporaryInput.value = reference;
+                                        document.body.appendChild(temporaryInput);
+                                        temporaryInput.select();
+
+                                        const copied =
+                                            document.execCommand("copy");
+
+                                        temporaryInput.remove();
+
+                                        if (!copied) {
+                                            throw new Error(
+                                                "Copy was unsuccessful."
+                                            );
+                                        }
+                                    }
+
+                                    copyButton.textContent =
+                                        "Copied Successfully!";
+
+                                } catch (error) {
+                                    alert(
+                                        "Please copy your reference number manually: " +
+                                        reference
+                                    );
+                                }
+                            }
+                        );
+                    }
+
+                    successMsg.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center"
+                    });
                 }
 
                 alert(
                     "Application submitted successfully!\n\n" +
-                    "Your Reference Number: " + reference
+                    "Your Reference Number: " + reference +
+                    "\n\nPlease keep this number safe."
                 );
 
                 bursaryForm.reset();
 
             } catch (error) {
+                console.error(
+                    "Application submission error:",
+                    error
+                );
 
-                console.error("Application submission error:", error);
+                // Remove the uploaded file if database saving fails.
 
-                // Try to remove an uploaded file if saving the
-                // application in the database failed.
                 if (uploadedPath) {
                     try {
                         await supabase.storage
                             .from(BUCKET_NAME)
                             .remove([uploadedPath]);
                     } catch (cleanupError) {
-                        console.error("Document cleanup failed:", cleanupError);
+                        console.error(
+                            "Document cleanup failed:",
+                            cleanupError
+                        );
                     }
                 }
 
@@ -322,7 +506,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 );
 
             } finally {
-
                 if (loader) loader.style.display = "none";
 
                 if (submitButton) {
@@ -337,42 +520,44 @@ document.addEventListener("DOMContentLoaded", async function () {
     // 5. ADMIN DASHBOARD SECURITY
     // ======================================================
 
-    const applicationsTable = document.getElementById("applicationsTable");
+    const applicationsTable = document.getElementById(
+        "applicationsTable"
+    );
 
     if (applicationsTable) {
-
         try {
-
             const { data, error } = await supabase.auth.getUser();
 
-            if (error || !data.user || data.user.email !== ADMIN_EMAIL) {
-
+            if (
+                error ||
+                !data.user ||
+                data.user.email !== ADMIN_EMAIL ||
+                data.user.id !== ADMIN_USER_ID
+            ) {
                 await supabase.auth.signOut();
 
-                alert("Please log in as the authorized administrator.");
+                alert(
+                    "Please log in as the authorized administrator."
+                );
 
                 window.location.href = "admin.html";
                 return;
             }
 
         } catch (error) {
-
             console.error("Admin verification error:", error);
-
             window.location.href = "admin.html";
             return;
         }
 
-        // ==================================================
-        // 6. ADMIN LOGOUT
-        // ==================================================
+        // ------------------------------------------
+        // ADMIN LOGOUT
+        // ------------------------------------------
 
         const logoutButton = document.getElementById("logoutBtn");
 
         if (logoutButton) {
-
             logoutButton.addEventListener("click", async function () {
-
                 if (!confirm("Are you sure you want to log out?")) {
                     return;
                 }
@@ -381,7 +566,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 logoutButton.textContent = "Logging out...";
 
                 try {
-
                     const { error } = await supabase.auth.signOut();
 
                     if (error) throw error;
@@ -389,7 +573,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                     window.location.href = "admin.html";
 
                 } catch (error) {
-
                     console.error("Logout error:", error);
 
                     showError("Unable to log out: " + error.message);
@@ -400,18 +583,31 @@ document.addEventListener("DOMContentLoaded", async function () {
             });
         }
 
-        const totalElement = document.getElementById("totalApplications");
-        const pendingElement = document.getElementById("pendingApplications");
-        const approvedElement = document.getElementById("approvedApplications");
-        const rejectedElement = document.getElementById("rejectedApplications");
-        const searchInput = document.getElementById("applicationSearch");
+        const totalElement = document.getElementById(
+            "totalApplications"
+        );
 
-        // ==================================================
-        // 7. LOAD APPLICATIONS
-        // ==================================================
+        const pendingElement = document.getElementById(
+            "pendingApplications"
+        );
+
+        const approvedElement = document.getElementById(
+            "approvedApplications"
+        );
+
+        const rejectedElement = document.getElementById(
+            "rejectedApplications"
+        );
+
+        const searchInput = document.getElementById(
+            "applicationSearch"
+        );
+
+        // ------------------------------------------
+        // LOAD APPLICATIONS
+        // ------------------------------------------
 
         async function loadApplications() {
-
             applicationsTable.innerHTML = `
                 <tr>
                     <td colspan="9" style="text-align:center;padding:20px;">
@@ -421,7 +617,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             `;
 
             try {
-
                 const { data, error } = await supabase
                     .from("applications")
                     .select("*")
@@ -434,48 +629,54 @@ document.addEventListener("DOMContentLoaded", async function () {
                 displayApplications();
 
             } catch (error) {
-
                 console.error("Loading applications error:", error);
 
                 applicationsTable.innerHTML = `
                     <tr>
-                        <td colspan="9" style="text-align:center;color:red;padding:20px;">
-                            Unable to load applications: ${escapeHTML(error.message)}
+                        <td colspan="9"
+                            style="text-align:center;color:red;padding:20px;">
+                            Unable to load applications:
+                            ${escapeHTML(error.message)}
                         </td>
                     </tr>
                 `;
             }
         }
 
-        // ==================================================
-        // 8. DASHBOARD STATISTICS
-        // ==================================================
+        // ------------------------------------------
+        // DASHBOARD STATISTICS
+        // ------------------------------------------
 
         function updateStatistics() {
-
             if (totalElement) {
                 totalElement.textContent = applications.length;
             }
 
             if (pendingElement) {
                 pendingElement.textContent =
-                    applications.filter(app => getStatus(app) === "Pending").length;
+                    applications.filter(
+                        app => getStatus(app) === "Pending"
+                    ).length;
             }
 
             if (approvedElement) {
                 approvedElement.textContent =
-                    applications.filter(app => getStatus(app) === "Approved").length;
+                    applications.filter(
+                        app => getStatus(app) === "Approved"
+                    ).length;
             }
 
             if (rejectedElement) {
                 rejectedElement.textContent =
-                    applications.filter(app => getStatus(app) === "Rejected").length;
+                    applications.filter(
+                        app => getStatus(app) === "Rejected"
+                    ).length;
             }
         }
 
-        // ==================================================
-        // 9. APPLICATION DETAILS MODAL
-        // ==================================================
+        // ------------------------------------------
+        // APPLICATION DETAILS MODAL
+        // ------------------------------------------
 
         const modal = document.createElement("div");
 
@@ -499,7 +700,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 padding:25px;
                 border-radius:10px;
             ">
-
                 <button id="closeDetailsModal" style="
                     float:right;
                     background:#b91c1c;
@@ -510,10 +710,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                     cursor:pointer;
                 ">Close X</button>
 
-                <h2 style="color:#123b27;">Application Details</h2>
+                <h2 style="color:#123b27;">
+                    Application Details
+                </h2>
 
                 <div id="applicationDetailsContent"></div>
-
             </div>
         `;
 
@@ -523,12 +724,11 @@ document.addEventListener("DOMContentLoaded", async function () {
             "applicationDetailsContent"
         );
 
-        // ==================================================
-        // 10. VIEW APPLICATION DETAILS
-        // ==================================================
+        // ------------------------------------------
+        // VIEW APPLICATION DETAILS
+        // ------------------------------------------
 
         async function viewApplication(index) {
-
             const app = applications[index];
 
             if (!app) {
@@ -567,23 +767,21 @@ document.addEventListener("DOMContentLoaded", async function () {
                 `;
             }).join("");
 
-            if (app.documentPath) {
+            modal.style.display = "block";
 
+            if (app.documentPath) {
                 const documentRow = document.createElement("div");
                 documentRow.style.padding = "12px";
-
                 documentRow.textContent = "Supporting document: ";
 
                 const loadingText = document.createElement("span");
-                loadingText.textContent = "Preparing secure document link...";
+                loadingText.textContent =
+                    "Preparing secure document link...";
 
                 documentRow.appendChild(loadingText);
                 detailsContent.appendChild(documentRow);
 
-                modal.style.display = "block";
-
                 try {
-
                     const { data, error } = await supabase.storage
                         .from(BUCKET_NAME)
                         .createSignedUrl(app.documentPath, 60);
@@ -600,15 +798,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                     loadingText.replaceWith(link);
 
                 } catch (error) {
-
                     console.error("Document access error:", error);
 
                     loadingText.textContent =
                         "Unable to open document: " + error.message;
                 }
-
-            } else {
-                modal.style.display = "block";
             }
         }
 
@@ -623,12 +817,11 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
         });
 
-        // ==================================================
-        // 11. DISPLAY APPLICATIONS
-        // ==================================================
+        // ------------------------------------------
+        // DISPLAY APPLICATIONS
+        // ------------------------------------------
 
         function displayApplications() {
-
             updateStatistics();
 
             const searchTerm = searchInput
@@ -638,7 +831,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             const filteredApplications = applications
                 .map((app, index) => ({ app, index }))
                 .filter(function (item) {
-
                     const app = item.app;
 
                     return [
@@ -651,12 +843,13 @@ document.addEventListener("DOMContentLoaded", async function () {
                         app.subLocation,
                         app.status
                     ].some(value =>
-                        String(value || "").toLowerCase().includes(searchTerm)
+                        String(value || "")
+                            .toLowerCase()
+                            .includes(searchTerm)
                     );
                 });
 
             if (filteredApplications.length === 0) {
-
                 applicationsTable.innerHTML = `
                     <tr>
                         <td colspan="9" style="text-align:center;padding:20px;">
@@ -664,150 +857,162 @@ document.addEventListener("DOMContentLoaded", async function () {
                         </td>
                     </tr>
                 `;
-
                 return;
             }
 
-            applicationsTable.innerHTML = filteredApplications.map(function (item) {
+            applicationsTable.innerHTML =
+                filteredApplications.map(function (item) {
+                    const app = item.app;
 
-                const app = item.app;
+                    return `
+                        <tr>
+                            <td>${item.index + 1}</td>
+                            <td>${escapeHTML(app.name)}</td>
+                            <td>${escapeHTML(app.idno)}</td>
+                            <td>${escapeHTML(app.phone)}</td>
+                            <td>${escapeHTML(app.school)}</td>
+                            <td>${escapeHTML(app.amount)}</td>
+                            <td>${escapeHTML(app.date || "Not available")}</td>
+                            <td>${escapeHTML(getStatus(app))}</td>
+                            <td>
+                                <button
+                                    data-action="view"
+                                    data-index="${item.index}">
+                                    View Details
+                                </button>
 
-                return `
-                    <tr>
-                        <td>${item.index + 1}</td>
-                        <td>${escapeHTML(app.name)}</td>
-                        <td>${escapeHTML(app.idno)}</td>
-                        <td>${escapeHTML(app.phone)}</td>
-                        <td>${escapeHTML(app.school)}</td>
-                        <td>${escapeHTML(app.amount)}</td>
-                        <td>${escapeHTML(app.date || "Not available")}</td>
-                        <td>${escapeHTML(getStatus(app))}</td>
+                                <button
+                                    data-action="approve"
+                                    data-index="${item.index}">
+                                    Approve
+                                </button>
 
-                        <td>
-                            <button
-                                data-action="view"
-                                data-index="${item.index}"
-                                style="background:#2563eb;color:white;border:none;padding:7px;border-radius:4px;margin:2px;cursor:pointer;">
-                                View Details
-                            </button>
-
-                            <button
-                                data-action="approve"
-                                data-index="${item.index}"
-                                style="background:#15803d;color:white;border:none;padding:7px;border-radius:4px;margin:2px;cursor:pointer;">
-                                Approve
-                            </button>
-
-                            <button
-                                data-action="reject"
-                                data-index="${item.index}"
-                                style="background:#b91c1c;color:white;border:none;padding:7px;border-radius:4px;margin:2px;cursor:pointer;">
-                                Reject
-                            </button>
-                        </td>
-                    </tr>
-                `;
-
-            }).join("");
+                                <button
+                                    data-action="reject"
+                                    data-index="${item.index}">
+                                    Reject
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }).join("");
         }
 
-        // ==================================================
-        // 12. VIEW, APPROVE AND REJECT
-        // ==================================================
+        // ------------------------------------------
+        // VIEW, APPROVE AND REJECT APPLICATIONS
+        // ------------------------------------------
 
-        applicationsTable.addEventListener("click", async function (event) {
+        applicationsTable.addEventListener(
+            "click",
+            async function (event) {
+                const button = event.target.closest(
+                    "button[data-action]"
+                );
 
-            const button = event.target.closest("button[data-action]");
+                if (!button) return;
 
-            if (!button) return;
+                const action = button.dataset.action;
+                const index = Number(button.dataset.index);
+                const app = applications[index];
 
-            const action = button.dataset.action;
-            const index = Number(button.dataset.index);
-            const app = applications[index];
+                if (!app) {
+                    showError("Application not found.");
+                    return;
+                }
 
-            if (!app) {
-                showError("Application not found.");
-                return;
+                if (action === "view") {
+                    await viewApplication(index);
+                    return;
+                }
+
+                if (action !== "approve" && action !== "reject") {
+                    return;
+                }
+
+                const newStatus =
+                    action === "approve" ? "Approved" : "Rejected";
+
+                if (
+                    !confirm(
+                        "Are you sure you want to " +
+                        action +
+                        " this application?"
+                    )
+                ) {
+                    return;
+                }
+
+                button.disabled = true;
+
+                try {
+                    const { error } = await supabase
+                        .from("applications")
+                        .update({
+                            application_status: newStatus
+                        })
+                        .eq("id", app.id);
+
+                    if (error) throw error;
+
+                    app.status = newStatus;
+
+                    alert(
+                        "Application " +
+                        newStatus.toLowerCase() +
+                        " successfully!"
+                    );
+
+                    displayApplications();
+
+                } catch (error) {
+                    console.error(
+                        "Application update error:",
+                        error
+                    );
+
+                    showError(
+                        "Unable to update application: " +
+                        error.message
+                    );
+
+                    button.disabled = false;
+                }
             }
+        );
 
-            if (action === "view") {
-                await viewApplication(index);
-                return;
-            }
-
-            if (action !== "approve" && action !== "reject") return;
-
-            const newStatus = action === "approve"
-                ? "Approved"
-                : "Rejected";
-
-            if (!confirm("Are you sure you want to " + action + " this application?")) {
-                return;
-            }
-
-            button.disabled = true;
-
-            try {
-
-                const { error } = await supabase
-                    .from("applications")
-                    .update({
-                        application_status: newStatus
-                    })
-                    .eq("id", app.id);
-
-                if (error) throw error;
-
-                app.status = newStatus;
-
-                alert("Application " + newStatus.toLowerCase() + " successfully!");
-
-                displayApplications();
-
-            } catch (error) {
-
-                console.error("Application update error:", error);
-
-                showError("Unable to update application: " + error.message);
-
-                button.disabled = false;
-            }
-        });
-
-        // ==================================================
-        // 13. SEARCH APPLICATIONS
-        // ==================================================
+        // ------------------------------------------
+        // SEARCH APPLICATIONS
+        // ------------------------------------------
 
         if (searchInput) {
-            searchInput.addEventListener("input", displayApplications);
+            searchInput.addEventListener(
+                "input",
+                displayApplications
+            );
         }
 
-        // Load dashboard data.
         await loadApplications();
     }
 
     // ======================================================
-    // 14. EXCEL EXPORT
+    // 6. EXCEL EXPORT
     // ======================================================
 
     const exportButton = document.getElementById("exportExcel");
 
     if (exportButton) {
-
         exportButton.addEventListener("click", function () {
-
             if (applications.length === 0) {
                 showError("There are no applications to export!");
                 return;
             }
 
             if (typeof XLSX === "undefined") {
-                showError("Excel library has not loaded. Check your internet connection.");
+                showError("Excel library has not loaded.");
                 return;
             }
 
             try {
-
                 const rows = applications.map((app, index) => ({
                     "No.": index + 1,
                     "Reference Number": app.reference || "",
@@ -842,24 +1047,23 @@ document.addEventListener("DOMContentLoaded", async function () {
                 );
 
             } catch (error) {
-
                 console.error("Excel export error:", error);
 
-                showError("Excel export failed: " + error.message);
+                showError(
+                    "Excel export failed: " + error.message
+                );
             }
         });
     }
 
     // ======================================================
-    // 15. PDF EXPORT
+    // 7. PDF EXPORT
     // ======================================================
 
     const pdfButton = document.getElementById("downloadPDF");
 
     if (pdfButton) {
-
         pdfButton.addEventListener("click", function () {
-
             if (applications.length === 0) {
                 showError("There are no applications to export!");
                 return;
@@ -871,7 +1075,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
 
             try {
-
                 const { jsPDF } = window.jspdf;
 
                 const doc = new jsPDF({
@@ -883,6 +1086,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                 doc.setFontSize(11);
                 doc.text("Bursary Applications Report", 14, 27);
+
                 doc.text(
                     "Generated: " + new Date().toLocaleString(),
                     14,
@@ -908,7 +1112,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                 doc.autoTable({
                     startY: 40,
-
                     head: [[
                         "No.",
                         "Reference",
@@ -920,15 +1123,12 @@ document.addEventListener("DOMContentLoaded", async function () {
                         "Application Date",
                         "Status"
                     ]],
-
                     body: rows,
-
                     styles: {
                         fontSize: 7,
                         cellPadding: 2,
                         overflow: "linebreak"
                     },
-
                     headStyles: {
                         fillColor: [30, 100, 60]
                     }
@@ -937,16 +1137,17 @@ document.addEventListener("DOMContentLoaded", async function () {
                 doc.save("Keyian_Ward_Bursary_Report.pdf");
 
             } catch (error) {
-
                 console.error("PDF export error:", error);
 
-                showError("PDF export failed: " + error.message);
+                showError(
+                    "PDF export failed: " + error.message
+                );
             }
         });
     }
 
-    console.log("KEYIAN WARD BURSARY SUPABASE SYSTEM READY");
+    console.log(
+        "KEYIAN WARD BURSARY SUPABASE SYSTEM READY"
+    );
 
 });
-
-

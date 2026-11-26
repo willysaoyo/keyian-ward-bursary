@@ -1,0 +1,273 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Apply for Bursary | Keyian Ward</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        .application-page {
+            max-width: 900px;
+            margin: 35px auto;
+            padding: 25px;
+        }
+
+        .application-heading {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .application-heading h2 {
+            color: #075526;
+        }
+
+        .application-form {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.07);
+        }
+
+        .application-form h3 {
+            color: #087a35;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+
+        .application-form label {
+            display: block;
+            margin-top: 18px;
+            margin-bottom: 7px;
+            font-weight: bold;
+        }
+
+        .application-form input,
+        .application-form select,
+        .application-form textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        .application-form button {
+            margin-top: 25px;
+            width: 100%;
+            padding: 15px;
+            background: #087a35;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .application-form button:hover {
+            background: #055b27;
+        }
+
+        .application-form .row {
+            display: flex;
+            gap: 18px;
+        }
+
+        .application-form .row > div {
+            flex: 1;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #087a35;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        #successMsg {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        @media(max-width: 600px) {
+            .application-form .row {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .application-page {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="header-inner">
+            <div>
+                <h1>KEYIAN WARD BURSARY</h1>
+                <span>Official Online Application Portal</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="application-page">
+
+        <a href="index.html" class="back-link">
+            ← Back to Homepage
+        </a>
+
+        <div class="application-heading">
+            <h2>Bursary Application Form</h2>
+            <p>
+                Complete all required fields accurately.
+                Fields marked * are compulsory.
+            </p>
+        </div>
+
+        <form id="bursaryForm" class="application-form">
+
+            <h3>1. Student Information</h3>
+
+            <label for="name">Full Name *</label>
+            <input type="text" id="name" required
+                placeholder="As per ID / birth certificate">
+
+            <div class="row">
+                <div>
+                    <label for="idno">
+                        ID / Birth Certificate Number *
+                    </label>
+                    <input type="text" id="idno" required>
+                </div>
+
+                <div>
+                    <label for="phone">Phone Number *</label>
+                    <input type="tel" id="phone" required
+                        placeholder="07xxxxxxxx">
+                </div>
+            </div>
+
+            <label for="email">Email Address *</label>
+            <input type="email" id="email" required
+                autocomplete="email"
+                placeholder="Enter your active email address">
+
+            <p style="font-size:13px;color:#555;">
+                Use an email address you can access.
+                You will need it when creating your student account.
+            </p>
+
+            <label for="sub-location">
+                Official Sub-location *
+            </label>
+
+            <select id="sub-location" required>
+                <option value="">-- Select your sub-location --</option>
+                <option value="Ildolisho">Ildolisho</option>
+                <option value="Mapashi">Mapashi</option>
+                <option value="Enoosaen">Enoosaen</option>
+                <option value="Isampin">Isampin</option>
+                <option value="Elang'ata osaen">Elang'ata osaen</option>
+                <option value="Olontare">Olontare</option>
+                <option value="Ilpashire">Ilpashire</option>
+                <option value="Ntuka">Ntuka</option>
+                <option value="Sikawa">Sikawa</option>
+                <option value="Oldanyati">Oldanyati</option>
+                <option value="Kiikat">Kiikat</option>
+            </select>
+
+            <label for="village">Village Name (Optional)</label>
+            <input type="text" id="village"
+                placeholder="Enter your village name">
+
+            <h3>2. School Information</h3>
+
+            <label for="school">
+                School / College / University *
+            </label>
+            <input type="text" id="school" required
+                placeholder="Enter your institution name">
+
+            <label for="level">Education Level *</label>
+
+            <select id="level" required>
+                <option value="">-- Select education level --</option>
+                <option value="primary">Primary</option>
+                <option value="secondary">Secondary</option>
+                <option value="college">College</option>
+                <option value="university">University</option>
+                <option value="special needs">Special Needs</option>
+            </select>
+
+            <div class="row">
+                <div>
+                    <label for="adm">Year / Admission Number</label>
+                    <input type="text" id="adm"
+                        placeholder="Enter year or admission number">
+                </div>
+
+                <div>
+                    <label for="amount">Amount Requested (Ksh) *</label>
+                    <input type="number" id="amount" min="1" required
+                        placeholder="e.g. 10000">
+                </div>
+            </div>
+
+            <h3>3. Supporting Documents</h3>
+
+            <label for="feefile">
+                Fee Structure / Admission Letter *
+                (PDF, JPG, PNG or WEBP)
+            </label>
+
+            <input type="file" id="feefile"
+                accept=".pdf,.jpg,.jpeg,.png,.webp" required>
+
+            <label for="m-pesa">
+                M-Pesa Transaction Code (Optional)
+            </label>
+
+            <input type="text" id="m-pesa"
+                placeholder="Enter transaction code if applicable">
+
+            <label for="reason">Reason for Applying *</label>
+
+            <textarea id="reason" rows="5" required
+                placeholder="Briefly explain your financial need..."></textarea>
+
+            <button type="submit" id="submitBtn">
+                Submit Application
+            </button>
+
+            <p id="loader" class="status" style="display:none;">
+                Submitting... Please wait.
+            </p>
+
+            <div id="successMsg" class="success-msg"
+                role="status" aria-live="polite"></div>
+
+        </form>
+
+    </main>
+
+    <footer>
+        <p>Keyian Ward Bursary | Official Online Portal</p>
+        <p>© 2026 Keyian Ward Bursary</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>

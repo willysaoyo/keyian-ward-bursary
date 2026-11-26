@@ -1,0 +1,329 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Student Portal | Keyian Ward Bursary</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f2f5f3;
+            color: #26352b;
+        }
+
+        header {
+            background: #126b3a;
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        .container {
+            max-width: 430px;
+            margin: 45px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 18px #00000015;
+        }
+
+        h2 {
+            text-align: center;
+            color: #126b3a;
+        }
+
+        label {
+            display: block;
+            margin-top: 16px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px;
+            margin-top: 7px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 6px;
+            background: #126b3a;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0b512b;
+        }
+
+        .switch {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .switch a {
+            color: #126b3a;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #message {
+            text-align: center;
+            margin-top: 18px;
+            overflow-wrap: anywhere;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin: 20px;
+            color: #126b3a;
+            text-decoration: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>KEYIAN WARD BURSARY</h1>
+    <p>Official Student Account Portal</p>
+</header>
+
+<div class="container">
+
+    <!-- LOGIN -->
+
+    <section id="loginSection">
+
+        <h2>Student Login</h2>
+
+        <form id="loginForm">
+
+            <label>Email Address</label>
+            <input
+                type="email"
+                id="loginEmail"
+                placeholder="Enter your email address"
+                autocomplete="email"
+                required
+            >
+
+            <label>Password</label>
+            <input
+                type="password"
+                id="loginPassword"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+            >
+
+            <button type="submit" id="loginButton">
+                Login to Account
+            </button>
+
+        </form>
+
+        <p class="switch">
+            Don't have an account?
+            <a id="showRegister">Create Account</a>
+        </p>
+
+    </section>
+
+    <!-- REGISTRATION -->
+
+    <section id="registerSection" class="hidden">
+
+        <h2>Create Student Account</h2>
+
+        <form id="registerForm">
+
+            <label>Full Name</label>
+            <input
+                type="text"
+                id="registerName"
+                placeholder="Enter your full name"
+                required
+            >
+
+            <label>Email Address</label>
+            <input
+                type="email"
+                id="registerEmail"
+                placeholder="Enter your email address"
+                autocomplete="email"
+                required
+            >
+
+            <label>Create Password</label>
+            <input
+                type="password"
+                id="registerPassword"
+                placeholder="At least 6 characters"
+                minlength="6"
+                autocomplete="new-password"
+                required
+            >
+
+            <button type="submit" id="registerButton">
+                Create Student Account
+            </button>
+
+        </form>
+
+        <p class="switch">
+            Already have an account?
+            <a id="showLogin">Login Here</a>
+        </p>
+
+    </section>
+
+    <p id="message" role="status"></p>
+
+</div>
+
+<a href="index.html" class="back">← Back to Homepage</a>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const client = window.supabaseClient;
+
+    const loginSection = document.getElementById("loginSection");
+    const registerSection = document.getElementById("registerSection");
+    const message = document.getElementById("message");
+
+    if (!client) {
+        message.textContent = "Database connection failed. Check supabase.js.";
+        return;
+    }
+
+    // SWITCH TO REGISTRATION
+    document.getElementById("showRegister").addEventListener("click", function () {
+        loginSection.classList.add("hidden");
+        registerSection.classList.remove("hidden");
+        message.textContent = "";
+    });
+
+    // SWITCH TO LOGIN
+    document.getElementById("showLogin").addEventListener("click", function () {
+        registerSection.classList.add("hidden");
+        loginSection.classList.remove("hidden");
+        message.textContent = "";
+    });
+
+    // CREATE STUDENT ACCOUNT
+    document.getElementById("registerForm").addEventListener("submit", async function (event) {
+
+        event.preventDefault();
+
+        const button = document.getElementById("registerButton");
+        button.disabled = true;
+        button.textContent = "Creating account...";
+        message.textContent = "";
+
+        const name = document.getElementById("registerName").value.trim();
+        const email = document.getElementById("registerEmail").value.trim();
+        const password = document.getElementById("registerPassword").value;
+
+        try {
+
+            const { data, error } = await client.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        full_name: name
+                    }
+                }
+            });
+
+            if (error) throw error;
+
+            if (data.session) {
+                message.textContent = "Account created! Opening dashboard...";
+                window.location.href = "student-dashboard.html";
+            } else {
+                message.textContent =
+                    "Account created. Check your email to confirm registration, then log in.";
+            }
+
+        } catch (error) {
+            message.textContent = error.message;
+        } finally {
+            button.disabled = false;
+            button.textContent = "Create Student Account";
+        }
+
+    });
+
+    // STUDENT LOGIN
+    document.getElementById("loginForm").addEventListener("submit", async function (event) {
+
+        event.preventDefault();
+
+        const button = document.getElementById("loginButton");
+        button.disabled = true;
+        button.textContent = "Logging in...";
+        message.textContent = "";
+
+        const email = document.getElementById("loginEmail").value.trim();
+        const password = document.getElementById("loginPassword").value;
+
+        try {
+
+            const { error } = await client.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            if (error) throw error;
+
+            message.textContent = "Login successful. Opening dashboard...";
+
+            window.location.href = "student-dashboard.html";
+
+        } catch (error) {
+            message.textContent = error.message;
+        } finally {
+            button.disabled = false;
+            button.textContent = "Login to Account";
+        }
+
+    });
+
+});
+
+</script>
+
+</body>
+</html>

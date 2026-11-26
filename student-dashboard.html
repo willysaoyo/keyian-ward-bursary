@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             "Could not load applications: " + appError.message;
         return;
     }
-
+    console.log("MY APPLICATIONS:", data);
     applicationsDiv.innerHTML = "";
 
     if (!data || data.length === 0) {

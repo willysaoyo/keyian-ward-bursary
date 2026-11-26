@@ -41,6 +41,17 @@
             font-size: 13px;
         }
 
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logout-btn {
+            background: #b91c1c;
+            padding: 11px 18px;
+        }
+
         .dashboard {
             width: 92%;
             max-width: 1400px;
@@ -196,8 +207,12 @@
             <p>Administration Management System</p>
         </div>
 
-        <div>
+        <div class="header-actions">
             <strong>ADMIN DASHBOARD</strong>
+
+            <button type="button" id="logoutBtn" class="logout-btn">
+                Logout
+            </button>
         </div>
 
     </header>
@@ -205,11 +220,8 @@
     <main class="dashboard">
 
         <section class="welcome">
-
             <h2>Welcome, Administrator</h2>
-
             <p>Manage bursary applications and student information.</p>
-
         </section>
 
         <!-- DASHBOARD STATISTICS -->
@@ -273,7 +285,6 @@
             <table>
 
                 <thead>
-
                     <tr>
                         <th>No.</th>
                         <th>Student Name</th>
@@ -285,7 +296,6 @@
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
-
                 </thead>
 
                 <tbody id="applicationsTable">
@@ -305,27 +315,26 @@
     </main>
 
     <footer class="dashboard-footer">
-
         <p>&copy; 2026 Keyian Ward Bursary. All Rights Reserved.</p>
-
     </footer>
 
     <!-- EXCEL LIBRARY -->
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <!-- PDF LIBRARY -->
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <!-- PDF AUTOTABLE LIBRARY -->
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
-    <!-- MAIN JAVASCRIPT -->
+    <!-- SUPABASE LIBRARY -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- SUPABASE CONNECTION -->
+    <script src="supabase.js"></script>
+
+    <!-- MAIN JAVASCRIPT -->
     <script src="script.js"></script>
 
 </body>
-
 </html>
