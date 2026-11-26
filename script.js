@@ -138,6 +138,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     data.user.id !== ADMIN_USER_ID
                 ) {
                     await supabase.auth.signOut();
+
                     throw new Error(
                         "This account is not authorized as the administrator."
                     );
@@ -181,30 +182,39 @@ document.addEventListener("DOMContentLoaded", async function () {
             if (successMsg) successMsg.innerHTML = "";
 
             // ------------------------------------------
-            // CHECK STUDENT LOGIN
+            // CHECK STUDENT LOGIN - MOBILE SESSION FIX
             // ------------------------------------------
 
             let user;
 
             try {
-                const { data, error } = await supabase.auth.getUser();
+                const { data: sessionData, error: sessionError } =
+                    await supabase.auth.getSession();
 
-                if (error) throw error;
+                if (sessionError) {
+                    throw sessionError;
+                }
 
-                user = data.user;
+                const session = sessionData.session;
 
-                if (!user) {
+                if (!session || !session.user) {
                     showError(
-                        "Please log in to your student account before applying."
+                        "Your login session has expired. Please log in again."
                     );
 
                     window.location.href = "student-login.html";
                     return;
                 }
 
+                user = session.user;
+
             } catch (error) {
                 console.error("Student authentication error:", error);
-                showError("Unable to verify your login: " + error.message);
+
+                showError(
+                    "Unable to verify your login: " + error.message
+                );
+
                 return;
             }
 
